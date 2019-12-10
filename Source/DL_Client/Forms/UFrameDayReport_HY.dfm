@@ -1,0 +1,73 @@
+inherited fFrameDayReport_HY: TfFrameDayReport_HY
+  inherited dxLayout1: TdxLayoutControl
+    object editType: TcxComboBox [0]
+      Left = 81
+      Top = 36
+      ParentFont = False
+      Properties.Items.Strings = (
+        #20840#37096#23458#25143
+        'A'#31867
+        'B'#31867)
+      Style.BorderColor = clWindowFrame
+      Style.BorderStyle = ebsSingle
+      Style.HotTrack = False
+      Style.ButtonStyle = btsHotFlat
+      Style.PopupBorderStyle = epbsSingle
+      TabOrder = 0
+      Text = #20840#37096#23458#25143
+      Width = 121
+    end
+    object Button1: TButton [1]
+      Left = 454
+      Top = 36
+      Width = 75
+      Height = 25
+      Caption = #32479#35745
+      TabOrder = 2
+      OnClick = Button1Click
+    end
+    object editDate: TcxButtonEdit [2]
+      Left = 265
+      Top = 36
+      ParentFont = False
+      Properties.Buttons = <
+        item
+          Default = True
+          Kind = bkEllipsis
+        end>
+      Properties.OnButtonClick = cxButtonEdit1PropertiesButtonClick
+      Style.BorderColor = clWindowFrame
+      Style.BorderStyle = ebsSingle
+      Style.HotTrack = False
+      Style.ButtonStyle = btsHotFlat
+      TabOrder = 1
+      Width = 184
+    end
+    inherited dxGroup1: TdxLayoutGroup
+      inherited GroupSearch1: TdxLayoutGroup
+        object dxLayout1Item1: TdxLayoutItem
+          Caption = #23458#25143#31867#22411':'
+          Control = editType
+          ControlOptions.ShowBorder = False
+        end
+        object dxLayout1Item4: TdxLayoutItem
+          Caption = #32479#35745#26085#26399':'
+          Control = editDate
+          ControlOptions.ShowBorder = False
+        end
+        object dxLayout1Item3: TdxLayoutItem
+          Control = Button1
+          ControlOptions.ShowBorder = False
+        end
+      end
+    end
+  end
+  inherited TitlePanel1: TZnBitmapPanel
+    inherited TitleBar: TcxLabel
+      Caption = #26085#25253#34920
+      Style.IsFontAssigned = True
+      AnchorX = 301
+      AnchorY = 11
+    end
+  end
+end
