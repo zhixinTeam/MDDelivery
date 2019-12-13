@@ -52,6 +52,18 @@ const
   c_WeChatStatusDeleted          = 2;  //订单已删除
 
 type
+  TSaleControl = record
+    FID         : string;                          
+    FGroup      : string;
+    FConValue   : Double;
+    FToValue    : Double;
+    FYYValue    : Double;
+    FKDValue    : Double;
+    FDOValue    : Double;
+    FCanLade    : Boolean;
+  end;
+  
+type
   TSysParam = record
     FProgID     : string;                            //程序标识
     FAppTitle   : string;                            //程序标题栏提示
@@ -80,6 +92,7 @@ type
     FSrvUrl     : string;                            //微信：请求微信地址
     FSrvPicUrl  : string;                            //微信：请求微信图片地址
     FOverTime   : Integer;                           //预约成功超时时间
+    FCusSaleControl: array of TSaleControl;  
   end;
   //系统参数
 

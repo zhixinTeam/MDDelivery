@@ -95,6 +95,9 @@ const
   cFI_FramePMaterailControl= $0077;                  //原材料进厂控制
   cFI_FormPMaterailControl= $1098;                   //原材料进厂控制
 
+  cFI_FrameSCustomerControl = $0078;                  //销售量控制
+  cFI_FormSCustomerControl  = $2095;                  //销售量控制
+
   cFI_FrameProvider     = $0102;                     //供应
   cFI_FrameProvideLog   = $0105;                     //供应日志
   cFI_FrameMaterails    = $0106;                     //原材料
@@ -415,6 +418,7 @@ begin
 
   AddMenuModuleItem('MAIN_D13', cFI_FormKPPayment, mtForm);
   AddMenuModuleItem('MAIN_D14', cFI_FormDaiPD, mtForm);
+  AddMenuModuleItem('MAIN_D15', cFI_FrameSCustomerControl);
 
   AddMenuModuleItem('MAIN_E01', cFI_FramePoundManual);
   AddMenuModuleItem('MAIN_E02', cFI_FramePoundAuto);

@@ -628,13 +628,35 @@ var
   nNewCardNo:string;
   nidx:Integer;
   i:Integer;
-  nRet: Boolean;
+  nRet, nCanLade : Boolean;
   nOrderItem:stMallOrderItem;
   nCard:string;
 begin
   Result := False;
   nOrderItem  := FWebOrderItems[FWebOrderIndex];
   nWebOrderID := editWebOrderNo.Text;
+
+  GetCusSaleControlValue(EditCus.Text);
+
+  nCanLade := True;
+  if nCanLade then//总量不超
+  begin
+    for nIdx := Low(gSysParam.FCusSaleControl) to High(gSysParam.FCusSaleControl) do
+    with gSysParam.FCusSaleControl[nIdx] do
+    begin
+      if (not FCanLade) and (nOrderItem.FGoodsID = FGroup) then
+      begin
+        nCanLade := False;
+        Break;
+      end;
+    end;
+  end;
+
+  if not nCanLade then
+  begin
+    ShowMsg('当日销售量已超,此订单无法办卡', sHint);
+    Exit;
+  end;
 
   if Trim(EditValue.Text) = '' then
   begin

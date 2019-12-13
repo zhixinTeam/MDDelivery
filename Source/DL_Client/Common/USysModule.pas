@@ -52,7 +52,7 @@ uses
   UFormGetWechartAccount, UFrameAuditTruck, UFormAuditTruck, UFrameBillBuDanAudit,
   UFormHYStock, UFormHYData, UFormHYRecord, UFormGetStockNo, UFrameXHSpot,UFormXHSpot,
   UFrameHYStock, UFrameHYData, UFrameHYRecord, UFormTransfer, UFrameTransfer,
-  UFrameDriverWh,UFormDriverWh,UFormKDInfo,UFrameKDInfo,
+  UFrameDriverWh,UFormDriverWh,UFormKDInfo,UFrameKDInfo,UFrameSCustomerControl, UFormSCustomerControl,
 
   {$IFDEF UseYCLHY}
   UFrameYCLHYRecord, UFormYCLHYRecord, UFrameYCLHYStock, UFormYCLHYStock,

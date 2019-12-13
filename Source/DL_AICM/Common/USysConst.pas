@@ -190,6 +190,18 @@ const
   cCmd_EditData         = $1005;                     //修改数据
   cCmd_ViewData         = $1006;                     //查看数据
   cCmd_GetData          = $1007;                     //选择数据
+  
+type
+  TSaleControl = record
+    FID         : string;                          
+    FGroup      : string;
+    FConValue   : Double;
+    FToValue    : Double;
+    FYYValue    : Double;
+    FKDValue    : Double;
+    FDOValue    : Double;
+    FCanLade    : Boolean;
+  end;
 
 type
   TSysParam = record
@@ -246,6 +258,7 @@ type
     FReadInsertCard:Boolean;                         //插入磁卡查询
     FEnablePurchaseMultipleCard:Boolean;             //采购允许办理多卡
     FTTCEK720ID  : string;                           //对应发卡机
+    FCusSaleControl: array of TSaleControl;  
   end;
   //系统参数
 
@@ -304,7 +317,7 @@ type
     FStatus: string;      //订单状态 1：新订单    
   end;
   //网上商城供货单明细
-
+  
 //------------------------------------------------------------------------------
 var
   gPath: string;                                     //程序所在路径

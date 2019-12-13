@@ -184,6 +184,8 @@ function get_shoporders(const nXmlStr: string): string;
 
 function get_shoporderbyno(const nXmlStr: string): string;
 //根据订单号获取订单信息
+function GetCusSaleControlValue(nCusID: string): Double;
+//业务员日销售量限制
 
 function get_shopPurchaseByno(const nXmlStr:string):string;
 //根据货单号获取供货信息
@@ -1626,6 +1628,141 @@ begin
   if CallBusinessWechat(cBC_WX_get_shoporderbyNO, nXmlStr, '', '' , @nOut,False) then
     Result := nOut.FData;
 end;
+
+
+function GetCusSaleControlValue(nCusID: string): Double;
+var nStr, nSaleID : string;
+    nIdx, nInt    : Integer;
+    nYYValue, nKDValue, nDoneValue: Double;
+    nBegDate, nEndDate: string;
+    nServerDate: TDateTime;
+begin
+  Result      := 0;
+  nYYValue    := 0;
+  nKDValue    := 0;
+  nDoneValue  := 0;
+
+  SetLength(gSysParam.FCusSaleControl, 0);
+
+  nSaleID := '';
+  //由客户编号找到业务员编号
+  nStr := ' Select C_SaleMan From %s where C_ID = ''%s'' ';
+  nStr := Format(nStr, [sTable_Customer, nCusID]);
+
+  with FDM.QueryTemp(nStr) do
+  if RecordCount > 0 then
+  begin
+    nSaleID := FieldByName('C_SaleMan').AsString;   
+  end;
+  
+
+  nStr := ' Select * From %s where C_SaleName = ''%s'' and C_Valid=''%s'' ';
+  nStr := Format(nStr, [sTable_SCustomerControl, sFlag_SCustomerControl, sFlag_Yes]);
+
+  with FDM.QueryTemp(nStr) do
+  if RecordCount <= 0 then
+  begin
+    Exit;
+  end;
+
+  nStr := ' Select * From %s where C_SaleID = ''%s'' and C_Valid = ''%s'' ';
+  nStr := Format(nStr, [sTable_SCustomerControl, nSaleID, sFlag_Yes]);
+
+  with FDM.QueryTemp(nStr) do
+  if RecordCount > 0 then
+  begin
+    SetLength(gSysParam.FCusSaleControl, RecordCount);
+
+    nInt := 0;
+    First;
+
+    while not Eof do
+    begin
+      with gSysParam.FCusSaleControl[nInt] do
+      begin
+        FGroup      := FieldByName('C_StockNo').AsString;
+        FConValue   := FieldByName('C_Value').AsFloat;
+        FToValue := 0;
+        FYYValue := 0;
+        FKDValue := 0;
+        FDOValue := 0;
+        FCanLade := True;
+      end;
+
+      Inc(nInt);
+      Next;
+    end;
+  end;
+
+  nStr := 'Select GetDate() as ServerDate ';
+
+  with FDM.QueryTemp(nStr) do
+  if RecordCount > 0 then
+  begin
+    nServerDate := Fields[0].AsDateTime;
+  end;
+
+  nBegDate := FormatDateTime('YYYY-MM-DD', nServerDate) + ' 00:00:00';
+  nEndDate := FormatDateTime('YYYY-MM-DD', nServerDate) + ' 23:59:59';
+
+  nStr := ' Select * From %s where D_Name=''%s'' ';
+  nStr := Format(nStr, [sTable_SysDict, sFlag_SCTime]);
+
+  with FDM.QueryTemp(nStr) do
+  if RecordCount > 0 then
+  begin
+    nBegDate := FormatDateTime('YYYY-MM-DD', nServerDate) + ' ' + FieldByName('D_Value').AsString;
+
+    if StrToDateTime(nBegDate) > nServerDate then
+    begin
+      nBegDate := FormatDateTime('YYYY-MM-DD', IncDay(nServerDate, -1)) + ' ' + FieldByName('D_Value').AsString;
+      nEndDate := FormatDateTime('YYYY-MM-DD', nServerDate) + ' ' + FieldByName('D_Value').AsString;
+    end
+    else
+    begin
+      nBegDate := FormatDateTime('YYYY-MM-DD', nServerDate) + ' ' + FieldByName('D_Value').AsString;
+      nEndDate := FormatDateTime('YYYY-MM-DD', IncDay(nServerDate, 1)) + ' ' + FieldByName('D_Value').AsString;
+    end;
+  end;
+
+  WriteLog('日销售量总控制时间段:' + nBegDate + '至' + nEndDate);
+
+  for nInt := Low(gSysParam.FCusSaleControl) to High(gSysParam.FCusSaleControl) do
+  with gSysParam.FCusSaleControl[nInt] do
+  begin
+    nStr := ' Select Sum(L_Value) from %s ' +
+            ' Where L_StockNo =''%s'' and L_SaleID = ''%s'' and (L_Date >= ''%s'' and L_Date <= ''%s'') and L_OutFact is null ';
+    nStr := Format(nStr,[sTable_Bill,FGroup, nSaleID, nBegDate, nEndDate]);
+
+    with FDM.QueryTemp(nStr) do
+    begin
+      if RecordCount > 0 then
+      begin
+        WriteLog('业务员[' + nSaleID + ']物料[' + FGroup + ']厂内开单量:' + Fields[0].AsString);
+        FKDValue := Float2PInt(Fields[0].AsFloat, cPrecision, False) / cPrecision;
+      end;
+    end;
+
+    nStr := ' Select Sum(L_Value) from %s ' +
+            ' Where L_StockNo =''%s'' and L_SaleID = ''%s'' and (L_Date >= ''%s'' and L_Date <= ''%s'') and L_OutFact is not null ';
+    nStr := Format(nStr,[sTable_Bill,FGroup, nSaleID, nBegDate, nEndDate]);
+
+    with FDM.QueryTemp(nStr) do
+    begin
+      if RecordCount > 0 then
+      begin
+        WriteLog('业务员[' + nSaleID + ']物料[' + FGroup + ']出厂量:' + Fields[0].AsString);
+        FDOValue := Float2PInt(Fields[0].AsFloat, cPrecision, False) / cPrecision;
+      end;
+    end;
+
+    FToValue := FYYValue + FKDValue + FDOValue;
+
+    if FToValue > FConValue then
+      FCanLade := False;
+  end;
+end;
+
 
 //根据货单号获取供货信息
 function get_shopPurchaseByno(const nXmlStr:string):string;

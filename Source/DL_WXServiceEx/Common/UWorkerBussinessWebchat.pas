@@ -143,6 +143,8 @@ type
     //同步车辆审核状态
     function SyncYYWebState(var nData: string): boolean;                        // Dl--->WxService
     //推送预约成功或超时信息
+    function GetCusSaleControlValue(nCusID: string): Double;
+    //获取业务员日销售限提量
     function SearchClient(var nData: string): Boolean;
     function SearchContractOrder(var nData: string): Boolean;
     function SearchMateriel(var nData: string): Boolean;
@@ -799,16 +801,19 @@ end;
 //Desc: 获取可用订单列表
 function TBusWorkerBusinessWebchat.GetOrderList(var nData: string): Boolean;
 var
+  nIdx: Integer;
   nStr, nType: string;
   nNode: TXmlNode;
   nValue, nMoney, nSalesCredit, nFMoney: Double;
-  nVefyWebOrder: Boolean;
+  nVefyWebOrder, nCanLade: Boolean;
 begin
   Result := False;
   BuildDefaultXML;
   nMoney := 0;
   nFMoney := 0;
   nVefyWebOrder := False;
+
+  GetCusSaleControlValue(FIn.FData);
 
   nStr := 'Select D_Value From %s Where D_Name=''%s''' ;
   nStr := Format(nStr,[sTable_SysDict, sFlag_VefyWebOrder]);
@@ -962,7 +967,29 @@ begin
           nValue := 0;
         end;
         {$ENDIF}
-        NodeNew('MaxNumber').ValueAsString := FloatToStr(nValue);
+
+
+        nCanLade := True;
+        if nCanLade then//总量不超
+        begin
+          for nIdx := Low(gSysParam.FCusSaleControl) to High(gSysParam.FCusSaleControl) do
+          with gSysParam.FCusSaleControl[nIdx] do
+          begin
+            if (not FCanLade) and (FieldByName('O_StockID').AsString = FGroup) then
+            begin
+              nCanLade := False;
+              Break;
+            end;
+          end;
+        end;
+
+        if nCanLade then
+          NodeNew('MaxNumber').ValueAsString  := FloatToStr(nValue)
+        else
+        begin
+          NodeNew('MaxNumber').ValueAsString  := '-100';
+          NodeNew('BillName').ValueAsString   := '当日销售量已超,此订单无法下单';
+        end;
         NodeNew('SaleArea').ValueAsString := '';
       end;
 
@@ -4369,6 +4396,141 @@ begin
         WriteLog('客户开单检查出参：' + nData);
       end;
     end;
+  end;
+end;
+
+function TBusWorkerBusinessWebchat.GetCusSaleControlValue(
+  nCusID: string): Double;
+var nStr, nSaleID : string;
+    nDBConn : PDBWorker;
+    nIdx, nInt : Integer;
+    nYYValue, nKDValue, nDoneValue: Double;
+    nBegDate, nEndDate: string;
+begin
+  Result        := 0;
+  nYYValue      := 0;
+  nKDValue      := 0;
+  nDoneValue    := 0;
+
+  nDBConn := gDBConnManager.GetConnection(gParamManager.ActiveParam^.FDB.FID, nIdx);
+  try
+    if not Assigned(nDBConn) then Exit;
+
+    if not nDBConn.FConn.Connected then
+      nDBConn.FConn.Connected := True;
+
+    SetLength(gSysParam.FCusSaleControl, 0);
+
+    nSaleID := '';
+    //由客户编号找到业务员编号
+    nStr := ' Select C_SaleMan From %s where C_ID = ''%s'' ';
+    nStr := Format(nStr, [sTable_Customer, nCusID]);
+
+    with gDBConnManager.WorkerQuery(nDBConn, nStr) do
+    if RecordCount > 0 then
+    begin
+      nSaleID := FieldByName('C_SaleMan').AsString;
+    end;
+
+    nStr := 'Select * From %s where C_SaleName = ''%s'' and C_Valid=''%s'' ';
+    nStr := Format(nStr, [sTable_SCustomerControl, sFlag_SCustomerControl, sFlag_Yes]);
+
+    with gDBConnManager.WorkerQuery(nDBConn, nStr) do
+    if RecordCount <= 0 then
+    begin
+      Exit;
+    end;
+
+    nStr := ' Select * From %s where C_SaleID = ''%s'' and C_Valid=''%s'' ';
+    nStr := Format(nStr, [sTable_SCustomerControl, nSaleID, sFlag_Yes]);
+
+    with gDBConnManager.WorkerQuery(nDBConn, nStr) do
+    if RecordCount > 0 then
+    begin
+      SetLength(gSysParam.FCusSaleControl, RecordCount);
+
+      nInt := 0;
+      First;
+
+      while not Eof do
+      begin
+        with gSysParam.FCusSaleControl[nInt] do
+        begin
+          FGroup      := FieldByName('C_StockNo').AsString;
+          FConValue   := FieldByName('C_Value').AsFloat;
+          FToValue := 0;
+          FYYValue := 0;
+          FKDValue := 0;
+          FDOValue := 0;
+          FCanLade := True;
+        end;
+
+        Inc(nInt);
+        Next;
+      end;
+    end;
+
+    nBegDate := FormatDateTime('YYYY-MM-DD', Now) + ' 00:00:00';
+    nEndDate := FormatDateTime('YYYY-MM-DD', Now) + ' 23:59:59';
+
+    nStr := 'Select * From %s where D_Name=''%s'' ';
+    nStr := Format(nStr, [sTable_SysDict, sFlag_SCTime]);
+
+    with gDBConnManager.WorkerQuery(nDBConn, nStr) do
+    if RecordCount > 0 then
+    begin
+      nBegDate := FormatDateTime('YYYY-MM-DD', Now) + ' ' + FieldByName('D_Value').AsString;
+
+      if StrToDateTime(nBegDate) > Now then
+      begin
+        nBegDate := FormatDateTime('YYYY-MM-DD', IncDay(Now, -1)) + ' ' + FieldByName('D_Value').AsString;
+        nEndDate := FormatDateTime('YYYY-MM-DD', Now) + ' ' + FieldByName('D_Value').AsString;
+      end
+      else
+      begin
+        nBegDate := FormatDateTime('YYYY-MM-DD', Now) + ' ' + FieldByName('D_Value').AsString;
+        nEndDate := FormatDateTime('YYYY-MM-DD', IncDay(Now, 1)) + ' ' + FieldByName('D_Value').AsString;
+      end;
+    end;
+
+    WriteLog('业务员销售量控制时间段:' + nBegDate + '至' + nEndDate);
+
+    for nInt := Low(gSysParam.FCusSaleControl) to High(gSysParam.FCusSaleControl) do
+    with gSysParam.FCusSaleControl[nInt] do
+    begin
+      nStr := 'select Sum(L_Value) from %s ' +
+              ' Where L_StockNo =''%s'' and L_SaleID = ''%s'' and (L_Date >= ''%s'' and L_Date <= ''%s'') and L_OutFact is null ';
+      nStr := Format(nStr,[sTable_Bill,FGroup, nSaleID,nBegDate,nEndDate]);
+
+      with gDBConnManager.WorkerQuery(nDBConn, nStr) do
+      begin
+        if RecordCount > 0 then
+        begin
+          WriteLog('业务员[' + nSaleID + ']物料[' + FGroup + ']厂内开单量:' + Fields[0].AsString);
+          FKDValue := Float2PInt(Fields[0].AsFloat, cPrecision, False) / cPrecision;
+        end;
+      end;
+
+      nStr := 'select Sum(L_Value) from %s ' +
+              ' Where L_StockNo =''%s'' and L_SaleID = ''%s'' and (L_Date >= ''%s'' and L_Date <= ''%s'') and L_OutFact is not null ';
+      nStr := Format(nStr,[sTable_Bill,FGroup, nSaleID,nBegDate,nEndDate]);
+
+      with gDBConnManager.WorkerQuery(nDBConn, nStr) do
+      begin
+        if RecordCount > 0 then
+        begin
+          WriteLog('业务员[' + nSaleID + ']物料[' + FGroup + ']出厂量:' + Fields[0].AsString);
+          FDOValue := Float2PInt(Fields[0].AsFloat, cPrecision, False) / cPrecision;
+        end;
+      end;
+
+      FToValue := FYYValue + FKDValue + FDOValue;
+
+      if FToValue > FConValue then
+        FCanLade := False;
+    end;
+  finally
+    gDBConnManager.ReleaseConnection(nDBConn);
   end;
 end;
 

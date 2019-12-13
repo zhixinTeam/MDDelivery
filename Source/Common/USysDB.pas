@@ -303,7 +303,9 @@ const
   sFlag_TransBase     = 'Bus_TransBase';             //短倒申请单号
   sFlag_TransferPound = 'TransferPound';             //短倒是否过磅
   sFlag_PMaterailControl= 'PMaterailControl';        //原材料进厂总控制
+  sFlag_SCustomerControl= 'SCustomerControl';        //销售量总控制
   sFlag_Between2BillsTime = 30;                      //同一车开单间隔，单位：分钟
+  sFlag_SCTime        = 'SaleControlTime';           //销售日发货量总控制时间段
 
   sFlag_HYSGroup      = 'HYSGroup';                  //化验室组
   sFlag_WLBGroup      = 'WLBGroup';                  //化验室组
@@ -419,6 +421,8 @@ const
 
   sTable_SalesCredit  = 'Sys_SalesCredit';           //业务员信用
   sTable_PMaterailControl = 'Sys_PMaterailControl';  //原材料进厂控制表
+
+  sTable_SCustomerControl = 'Sys_SCustomerControl';  //销售量控制表
   
   {*新建表*}
   sSQL_NewSysDict = 'Create Table $Table(D_ID $Inc, D_Name varChar(15),' +
@@ -1979,6 +1983,21 @@ const
    *.C_Memo:备注
   -----------------------------------------------------------------------------}
 
+  sSQL_NewSCControlInfo = 'Create Table $Table(R_ID $Inc, C_SaleID varChar(32),' +
+       'C_SaleName varChar(150), C_StockNo varChar(32), C_StockName varChar(150),' +
+       'C_Valid char(1) default ''Y'', C_Value Decimal(15,5) Default 0, C_Memo varchar(200))';
+  {-----------------------------------------------------------------------------
+   业务员限量控制表:
+   *.R_ID: 编号
+   *.C_SaleID: 业务员编号
+   *.C_SaleName: 业务员名称
+   *.C_StockNo: 物料编号
+   *.C_StockName: 物料名称
+   *.C_Valid: 是否有效
+   *.C_Value: 控制量
+   *.C_Memo: 备注
+  -----------------------------------------------------------------------------}
+
   sSQL_NewPMControlInfo = 'Create Table $Table(R_ID $Inc, C_CusID varChar(32),' +
        'C_CusName varChar(150), C_StockNo varChar(32), C_StockName varChar(150),' +
        'C_Type char(1) default ''0'' , C_Value $Float default 0,' +
@@ -2167,6 +2186,8 @@ begin
 
   AddSysTableItem(sTable_SalesCredit, sSQL_NewSalesCredit);
   AddSysTableItem(sTable_PMaterailControl,sSQL_NewPMControlInfo);
+
+  AddSysTableItem(sTable_SCustomerControl,sSQL_NewSCControlInfo);
 end;
 
 //Desc: 清理系统表
