@@ -441,7 +441,7 @@ function THardwareCommander.PrintCode(var nData: string): Boolean;
 const
  AZM :array[1..26] of string = ('A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z');
 var
-  nStr,nCode,nPrint,nZMStr: string;
+  nStr,nCode,nPrint,nZMStr,nHYDan: string;
   nPre, nNum, k: Integer;
 begin
   Result := True;
@@ -468,7 +468,12 @@ begin
     nPre := Length(Trim(Fields[2].AsString));
     nNum := StrToInt(Copy(Fields[1].AsString,nPre+1,200));
     k := nNum mod 26 + 1 + Fields[3].AsInteger;
-    nCode := 'MD'+ AZM[k] + Date2StrEx(Now,True) + Fields[1].AsString;
+    nHYDan := Fields[1].AsString;
+    if StrToIntDef(Copy(Fields[1].AsString,1,2),0) > 0 then
+      nHYDan := Copy(Fields[1].AsString,3,MaxInt)
+    else
+      nHYDan := Fields[1].AsString;
+    nCode := 'MD'+ AZM[k] + Date2StrEx(Now,True) + nHYDan;
     nCode := StringReplace(nCode, '0', 'O', [rfReplaceAll]);
     nCode := StringReplace(nCode, '-', '/', [rfReplaceAll]);
   end;

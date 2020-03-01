@@ -722,15 +722,10 @@ begin
                 {$ENDIF}
               {$ENDIF} //∆Ù”√‘À∑—
 
-              {$IFDEF IdentCard}
-              SF('L_Ident', FListA.Values['Ident']),
-              SF('L_SJName', FListA.Values['SJName']),
-              {$ENDIF}
-
               {$IFDEF UseWebYYOrder}
               SF('L_WebOrderID', FListA.Values['WebOrderID']),
               {$ENDIF}
-
+              SF('L_SJName', FListA.Values['SJName']),
               SF('L_ZKMoney', nFixMoney),
               SF('L_Truck', FListA.Values['Truck']),
               SF('L_Lading', FListA.Values['Lading']),
@@ -1970,20 +1965,12 @@ begin
       end;
     end;
   end;
-
-  {$IFDEF SendUnLoadPlace}
+  
   nStr := 'Select L_ID,L_ZhiKa,L_CusID,L_CusName,L_Type,L_StockNo,' +
           'L_StockName,L_Truck,L_Value,L_Price,L_ZKMoney,L_Status,' +
           'L_NextStatus,L_Card,L_IsVIP,L_PValue,L_MValue,L_PrintHY,' +
-          'L_HYDan, L_EmptyOut, L_LadeTime,L_CusType,L_SPlace From $Bill b ';
+          'L_HYDan, L_EmptyOut, L_LadeTime,L_CusType,L_SJName From $Bill b ';
   //xxxxx
-  {$ELSE}
-  nStr := 'Select L_ID,L_ZhiKa,L_CusID,L_CusName,L_Type,L_StockNo,' +
-          'L_StockName,L_Truck,L_Value,L_Price,L_ZKMoney,L_Status,' +
-          'L_NextStatus,L_Card,L_IsVIP,L_PValue,L_MValue,L_PrintHY,' +
-          'L_HYDan, L_EmptyOut, L_LadeTime,L_CusType From $Bill b ';
-  //xxxxx
-  {$ENDIF}
 
   if nIsBill then
        nStr := nStr + 'Where L_ID=''$CD'''
@@ -2032,6 +2019,7 @@ begin
       FPrintHY    := FieldByName('L_PrintHY').AsString = sFlag_Yes;
       FLadeTime   := FieldByName('L_LadeTime').AsString;
       FCusType    := FieldByName('L_CusType').AsString;
+      FSJName     := FieldByName('L_SJName').AsString;
 
       if FIsVIP = sFlag_TypeShip then
       begin
@@ -2251,6 +2239,7 @@ begin
               SF('P_Type', sFlag_Sale),
               SF('P_Bill', FID),
               SF('P_Truck', FTruck),
+              SF('P_SJName', nBills[nInt].FSJName),
               SF('P_CusID', FCusID),
               SF('P_CusName', FCusName),
               SF('P_MID', FStockNo),

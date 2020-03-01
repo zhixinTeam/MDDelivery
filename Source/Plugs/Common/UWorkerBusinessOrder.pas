@@ -412,7 +412,7 @@ begin
             {$IFDEF UseKuangDian}
             SF('O_KD', FListA.Values['KD']),
             {$ENDIF}
-
+            SF('O_SJName', FListA.Values['SJName']),
             SF('O_Truck', FListA.Values['Truck']),
             SF('O_Man', FIn.FBase.FFrom.FUser),
             SF('O_Date', sField_SQLServer_Now, sfVal)
@@ -672,7 +672,7 @@ begin
   end;
 
   nStr := 'Select O_ID,O_Card,O_ProID,O_ProName,O_Type,O_StockNo,' +
-          'O_StockName,O_Truck,O_Value,O_KD ' +
+          'O_StockName,O_Truck,O_Value,O_KD,O_SJName ' +
           'From $OO oo ';
   //xxxxx
 
@@ -710,6 +710,7 @@ begin
       Values['O_Value']      := FloatToStr(FieldByName('O_Value').AsFloat);
 
       Values['KD']           := FieldByName('O_KD').AsString;
+      Values['SJName']       := FieldByName('O_SJName').AsString;
     end;
   end;
 
@@ -745,6 +746,7 @@ begin
 
         FCard       := Values['O_Card'];
         FKD         := Values['KD'];
+        FSJName     := Values['SJName'];
         FStatus     := sFlag_TruckNone;
         FNextStatus := sFlag_TruckNone;
         FSelected := True;
@@ -802,6 +804,7 @@ begin
         FMemo     := FieldByName('D_Memo').AsString;
         FYSValid  := FieldByName('D_YSResult').AsString;
         FKD       := FieldByName('D_KD').AsString;
+        FSJName   := Values['SJName'];
         FSerialNo := FieldByName('D_SerialNo').AsString;
         FKZValue  := FieldByName('D_KZValueEx').AsFloat;
         if Assigned(FindField('D_UPlace')) then
@@ -958,6 +961,7 @@ begin
                 SF('P_PValue', nPreValue, sfVal),
                 SF('P_PDate', sField_SQLServer_Now, sfVal),
                 SF('P_FactID', FFactory),
+                SF('P_SJName', FSJName),
                 SF('P_PStation', FPData.FStation),
                 SF('P_Direction', '进厂'),
                 SF('P_PModel', FPModel),
@@ -1026,6 +1030,7 @@ begin
             SF('P_FactID', FFactory),
             SF('P_PStation', FPData.FStation),
             SF('P_Direction', '进厂'),
+            SF('P_SJName', FSJName),
             SF('P_PModel', FPModel),
             SF('P_Status', sFlag_TruckBFP),
             SF('P_Valid', sFlag_Yes),
