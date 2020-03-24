@@ -467,7 +467,7 @@ begin
 
     nPre := Length(Trim(Fields[2].AsString));
     nNum := StrToInt(Copy(Fields[1].AsString,nPre+1,200));
-    k := nNum mod 26 + 1 + Fields[3].AsInteger;
+    k := (nNum + Fields[3].AsInteger) mod 26 + 1 ;
     nHYDan := Fields[1].AsString;
     if StrToIntDef(Copy(Fields[1].AsString,1,2),0) > 0 then
       nHYDan := Copy(Fields[1].AsString,3,MaxInt)
@@ -738,7 +738,10 @@ begin
   else nReader := nIn;
 
   if Trim(nReader) <> '' then
+  begin
     gHYReaderManager.OpenDoor(Trim(nReader));
+    WriteLog('¶Á¿¨Æ÷£º'+Trim(nReader)+'½øÐÐÌ§¸Ë²Ù×÷');
+  end;
 end;
 
 //Date: 2018-02-27
