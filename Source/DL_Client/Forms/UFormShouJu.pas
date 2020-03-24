@@ -43,6 +43,10 @@ type
     EditBank: TcxComboBox;
     dxLayout1Item13: TdxLayoutItem;
     dxLayout1Group6: TdxLayoutGroup;
+    EditPayingMan: TcxTextEdit;
+    dxLayout1Item14: TdxLayoutItem;
+    EditPriceStock: TcxMemo;
+    dxLayout1Item15: TdxLayoutItem;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure EditMoneyExit(Sender: TObject);
@@ -97,9 +101,12 @@ begin
       FRecordID := '';
       Caption := ' ’æ› - ÃÌº”';
 
-      EditName.Text := nP.FParamA;
-      EditReason.Text := nP.FParamB;
-      EditMoney.Text := nP.FParamC;
+      EditName.Text      := nP.FParamA;
+      EditReason.Text    := nP.FParamB;
+      EditPayingMan.Text := nP.FParamD;
+      EditMemo.Text      := nP.FParamE;
+      EditMoney.Text     := nP.FParamC;
+      EditPriceStock.Text:= nP.FParamF;
       EditMoneyExit(nil);
 
       InitFormData('');

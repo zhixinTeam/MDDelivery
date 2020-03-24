@@ -594,7 +594,7 @@ procedure TfFrameManualPoundItem.BtnReadNumberClick(Sender: TObject);
 var nVal: Double;
 begin
   if not IsNumber(EditValue.Text, True) then Exit;
-  if not IsTruckProbeOK then Exit;
+//  if not IsTruckProbeOK then Exit;
   nVal := StrToFloat(EditValue.Text);
 
   if (Length(FBillItems) > 0) and (FCardUsed <> sFlag_Provide) then
@@ -926,7 +926,7 @@ end;
 procedure TfFrameManualPoundItem.BtnSaveClick(Sender: TObject);
 var nBool: Boolean;
 begin
-  if not IsTruckProbeOK then Exit;
+//  if not IsTruckProbeOK then Exit;
   nBool := False;
   try
     BtnSave.Enabled := False;

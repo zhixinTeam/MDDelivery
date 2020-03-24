@@ -27,7 +27,8 @@ uses
   UFormCard, UFormTruckIn, UFormTruckOut, UFormLadingDai, UFormLadingSan,
   UFramePoundManual, UFramePoundAuto, UFramePMaterails, UFormPMaterails,
   UFramePProvider, UFormPProvider, UFramePoundQuery, UFramePoundQueryKS,
-  UFramePoundQueryKZ, UFormPoundTwoKZ, UFrameQuerySaleDetail,UFrameQuerySaletunnel,
+  UFramePoundQueryKZ, UFormPoundTwoKZ, UFramePoundQueryGY, UFormPoundOldValue,
+  UFrameQuerySaleDetail,UFrameQuerySaletunnel,
   UFrameQuerySaleTotal, UFrameZTDispatch, UFrameTrucks, UFormTruck,
   UFormRFIDCard, UFrameBillFactIn, UFormBillFactIn, UFormBillSalePlan,
   UFormTodo, UFormTodoSend, UFrameTodo, UFrameBatcodeJ, UFormBatcodeJ,
@@ -41,7 +42,7 @@ uses
   UFramePurchaseOrder, UFormPurchaseOrder, UFormPurchasing,
   UFrameQueryOrderDetail, UFrameOrderCard,  UFrameOrderDetail,
   UFormGetProvider, UFormGetMeterails, UFramePOrderBase, UFormPOrderBase,
-  UFormGetPOrderBase, UFormOrderDtl,
+  UFormGetPOrderBase, UFormOrderDtl, UFormGetPayingUnit,
   {.$ENDIF}
   UFramePoundMtAuto,UFramePoundMtAutoItem,UFramePoundMtQuery,
   //桐乡码头抓斗秤
@@ -53,13 +54,10 @@ uses
   UFormHYStock, UFormHYData, UFormHYRecord, UFormGetStockNo, UFrameXHSpot,UFormXHSpot,
   UFrameHYStock, UFrameHYData, UFrameHYRecord, UFormTransfer, UFrameTransfer,
   UFrameDriverWh,UFormDriverWh,UFormKDInfo,UFrameKDInfo,UFrameSCustomerControl, UFormSCustomerControl,
-
-  {$IFDEF UseYCLHY}
-  UFrameYCLHYRecord, UFormYCLHYRecord, UFrameYCLHYStock, UFormYCLHYStock,
-  {$ENDIF}
+  
   //东义财务报表
   UFrameNotice, UFrameDaySals, UFrameMonthSales, UFrameDayPrice,
-  UFrameMonthPrice, UCollectMoney, UAccReport, UFrameSaleAndMoney,
+  UFrameMonthPrice, UCollectMoney, UAccReport, UFrameSaleAndMoney,UFormKSKD,
   UFrameDaySalesHj, UFrameDayReport,UFrameDayReport_HY, UFrameQuerySaleTotal2HY,
   UFrameCusTotalMoney, UFrameCusReceivable, UFrameQrySaleByMonth,
   UFramePurchByMonth;

@@ -55,6 +55,12 @@ type
     dxLayout1Item19: TdxLayoutItem;
     EditStockName3: TcxComboBox;
     dxLayout1Item20: TdxLayoutItem;
+    EditAcceptNum: TcxTextEdit;
+    dxLayout1Item21: TdxLayoutItem;
+    EditPayingUnit: TcxTextEdit;
+    dxLayout1Item22: TdxLayoutItem;
+    EditPayingMan: TcxTextEdit;
+    dxLayout1Item23: TdxLayoutItem;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure EditSalesManPropertiesChange(Sender: TObject);
@@ -64,6 +70,7 @@ type
     procedure EditNameKeyPress(Sender: TObject; var Key: Char);
     procedure BtnOKClick(Sender: TObject);
     procedure EditMoneyExit(Sender: TObject);
+    procedure EditPayingUnitKeyPress(Sender: TObject; var Key: Char);
   protected
     { Private declarations }
     function OnVerifyCtrl(Sender: TObject; var nHint: string): Boolean; override;
@@ -364,7 +371,7 @@ end;
 procedure TfFormPayment.BtnOKClick(Sender: TObject);
 var
   nP: TFormCommandParam;
-  nPriceStock : string;
+  nPriceStock, nStr : string;
 begin
   if not IsDataValid then Exit;
 
@@ -379,17 +386,36 @@ begin
   end;
   if not SaveCustomerPayment(gInfo.FCusID, gInfo.FCusName,
      GetCtrlData(EditSalesMan), sFlag_MoneyHuiKuan, EditType.Text, EditDesc.Text,
-     StrToFloat(EditMoney.Text),StrToFloatDef(EditPrice1.Text,0),nPriceStock, True) then
+     StrToFloat(EditMoney.Text),StrToFloatDef(EditPrice1.Text,0),nPriceStock,EditAcceptNum.Text,
+     EditPayingUnit.Text,EditPayingMan.Text, True) then
   begin
     ShowMsg('回款操作失败', sError); Exit;
+  end;
+
+  //保存交货单位信息
+  nStr := 'Select Count(*) From %s Where P_PayingUnit=''%s''';
+  nStr := Format(nStr, [sTable_PayingUnit, Trim(EditPayingUnit.Text)]);
+  
+  with FDM.QueryTemp(nStr) do
+  if Fields[0].AsInteger < 1 then
+  begin
+    nStr := 'Insert Into %s(P_PayingUnit, P_PY) Values(''%s'', ''%s'')';
+    nStr := Format(nStr, [sTable_PayingUnit, Trim(EditPayingUnit.Text), GetPinYinOfStr(Trim(EditPayingUnit.Text))]);
+    FDM.ExecuteSQL(nStr);
   end;
 
   if StrToFloat(EditMoney.Text) > 0 then
   begin
     nP.FCommand := cCmd_AddData;
-    nP.FParamA := gInfo.FCusName;
-    nP.FParamB := '销售回款或预付款';
-    nP.FParamC := EditMoney.Text;
+    nP.FParamA  := EditPayingUnit.Text;
+    if Trim(EditAcceptNum.Text) <> '' then
+      nP.FParamB  := EditType.Text +'('+Trim(EditAcceptNum.Text)+')'
+    else
+      nP.FParamB  := EditType.Text;
+    nP.FParamC  := EditMoney.Text;
+    nP.FParamD  := EditPayingMan.Text;
+    nP.FParamE  := EditDesc.Text;
+    nP.FParamF  := nPriceStock;
     CreateBaseFormItem(cFI_FormShouJu, '', @nP);
   end;
   //校正纸卡限提
@@ -495,6 +521,24 @@ begin
   inherited;
   nStr := SmallTOBig(StrToFloat(EditMoney.Text));
   ShowMessage(nStr);
+  ActiveControl := EditPrice1;
+end;
+
+procedure TfFormPayment.EditPayingUnitKeyPress(Sender: TObject;
+  var Key: Char);
+var nP: TFormCommandParam;
+begin
+  inherited;
+  if (Key = Char(VK_SPACE)) then
+  begin
+    Key := #0;
+    nP.FParamA := EditPayingUnit.Text;
+    CreateBaseFormItem(cFI_FormGetPayingUnit, '', @nP);
+
+    if (nP.FCommand = cCmd_ModalResult) and(nP.FParamA = mrOk) then
+      EditPayingUnit.Text := nP.FParamB;
+    EditPayingUnit.SelectAll;
+  end;
 end;
 
 initialization

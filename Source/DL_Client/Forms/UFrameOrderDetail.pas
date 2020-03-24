@@ -14,7 +14,7 @@ uses
   cxMaskEdit, cxButtonEdit, cxTextEdit, ADODB, cxLabel, UBitmapPanel,
   cxSplitter, cxGridLevel, cxClasses, cxGridCustomView,
   cxGridCustomTableView, cxGridTableView, cxGridDBTableView, cxGrid,
-  ComCtrls, ToolWin, cxCheckBox;
+  ComCtrls, ToolWin, cxCheckBox, cxDropDownEdit;
 
 type
   TfFrameOrderDetail = class(TfFrameNormal)
@@ -41,6 +41,8 @@ type
     N3: TMenuItem;
     Check1: TcxCheckBox;
     N4: TMenuItem;
+    dxLayout1Item9: TdxLayoutItem;
+    chkTime: TcxComboBox;
     procedure EditDatePropertiesButtonClick(Sender: TObject;
       AButtonIndex: Integer);
     procedure EditTruckPropertiesButtonClick(Sender: TObject;
@@ -51,6 +53,7 @@ type
     procedure Check1Click(Sender: TObject);
     procedure N4Click(Sender: TObject);
     procedure BtnEditClick(Sender: TObject);
+    procedure chkTimePropertiesChange(Sender: TObject);
   private
     { Private declarations }
   protected
@@ -88,6 +91,7 @@ begin
 
   FJBWhere := '';
   InitDateRange(Name, FStart, FEnd);
+  chkTime.ItemIndex := 1;
 end;
 
 procedure TfFrameOrderDetail.OnDestroyFrame;
@@ -108,7 +112,12 @@ begin
     if Check1.Checked then
       Result := Result + 'Where (D_DelDate>=''$S'' and D_DelDate <''$End'')'
     else
-      Result := Result + 'Where (D_InTime>=''$S'' and D_InTime <''$End'')';
+    begin
+      if chkTime.ItemIndex = 0 then
+        Result := Result + ' Where (D_InTime>=''$S'' and D_InTime <''$End'') '
+      else
+        Result := Result + ' Where (D_PDate>=''$S'' and D_PDate <''$End'') and D_OutFact is not null  ';
+    end;
 
     if nWhere <> '' then
       Result := Result + ' And (' + nWhere + ')';
@@ -330,6 +339,12 @@ begin
 
     InitFormData('');
   end;
+end;
+
+procedure TfFrameOrderDetail.chkTimePropertiesChange(Sender: TObject);
+begin
+  inherited;
+  InitFormData(FWhere);
 end;
 
 initialization

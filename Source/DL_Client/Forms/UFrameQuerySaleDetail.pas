@@ -144,7 +144,8 @@ begin
             'L_Price-L_Freight as L_NetPrice,(L_Price-L_Freight)*L_Value as L_NetMoney,'+
             'L_Value*L_Freight as TotalFreight,L_Value-L_MValue+L_PValue as ValueDiff,'+
             {$ENDIF}
-            '(P_MValue-P_PValue) As P_NetWeight From $Bill b ' +
+            '(P_MValue-P_PValue) As P_NetWeight, '+
+            ' '''+EditDate.Text+''' as P_BetweenTime From $Bill b ' +
             'left join $Pound P on P.P_Bill = b.L_ID '+
             'left join S_ZhiKa z on b.L_ZhiKa=z.Z_ID ';
   {$ELSE}
@@ -153,7 +154,9 @@ begin
 
   if FJBWhere = '' then
   begin
-    Result := Result + 'Where (L_OutFact>=''$S'' and L_OutFact <''$End'')';
+//    Result := Result + 'Where (L_OutFact>=''$S'' and L_OutFact <''$End'')';
+
+    Result := Result + 'Where (L_MDate>=''$S'' and L_MDate <''$End'' ) and L_OutFact is not null ';
 
     if nWhere <> '' then
       Result := Result + ' And (' + nWhere + ')';

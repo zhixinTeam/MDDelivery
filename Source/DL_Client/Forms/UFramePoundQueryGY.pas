@@ -2,7 +2,7 @@
   作者: dmzn@163.com 2012-03-31
   描述: 称重查询
 *******************************************************************************}
-unit UFramePoundQuery;
+unit UFramePoundQueryGY;
 
 interface
 
@@ -17,7 +17,7 @@ uses
   ComCtrls, ToolWin;
 
 type
-  TfFramePoundQuery = class(TfFrameNormal)
+  TfFramePoundQueryGY = class(TfFrameNormal)
     cxTextEdit1: TcxTextEdit;
     dxLayout1Item1: TdxLayoutItem;
     EditTruck: TcxButtonEdit;
@@ -48,7 +48,6 @@ type
     N9: TMenuItem;
     N10: TMenuItem;
     N11: TMenuItem;
-    N12: TMenuItem;
     procedure EditDatePropertiesButtonClick(Sender: TObject;
       AButtonIndex: Integer);
     procedure EditTruckPropertiesButtonClick(Sender: TObject;
@@ -63,7 +62,6 @@ type
     procedure cxView1DblClick(Sender: TObject);
     procedure N10Click(Sender: TObject);
     procedure N11Click(Sender: TObject);
-    procedure N12Click(Sender: TObject);
   private
     { Private declarations }
   protected
@@ -91,12 +89,12 @@ uses
   ShellAPI, ULibFun, UMgrControl, UDataModule, USysBusiness, UFormDateFilter,
   UFormBase, UFormWait, USysConst, USysDB;
 
-class function TfFramePoundQuery.FrameID: integer;
+class function TfFramePoundQueryGY.FrameID: integer;
 begin
-  Result := cFI_FramePoundQuery;
+  Result := cFI_FramePoundQueryGY;
 end;
 
-procedure TfFramePoundQuery.OnCreateFrame;
+procedure TfFramePoundQueryGY.OnCreateFrame;
 begin
   inherited;
   FTimeS := Str2DateTime(Date2Str(Now) + ' 00:00:00');
@@ -107,14 +105,14 @@ begin
   cxView1.OptionsSelection.MultiSelect := True;
 end;
 
-procedure TfFramePoundQuery.OnDestroyFrame;
+procedure TfFramePoundQueryGY.OnDestroyFrame;
 begin
   SaveDateRange(Name, FStart, FEnd);
   inherited;
 end;
 
 //Desc: 获取nRow行nField字段的内容
-function TfFramePoundQuery.GetVal(const nRow: Integer;
+function TfFramePoundQueryGY.GetVal(const nRow: Integer;
  const nField: string): string;
 var nVal: Variant;
 begin
@@ -127,36 +125,29 @@ begin
   else Result := nVal;
 end;
 
-function TfFramePoundQuery.InitFormDataSQL(const nWhere: string): string;
+function TfFramePoundQueryGY.InitFormDataSQL(const nWhere: string): string;
 begin
   FEnableBackDB := True;
   //启用备份数据库
 
   EditDate.Text := Format('%s 至 %s', [Date2Str(FStart), Date2Str(FEnd)]);
 
-  Result := ' Select * from '+
-            ' (Select case When P_Type = ''P'' then P_PDate else P_MDate end P_TwoDate, '+
-            ' pl.*,(P_MValue-P_PValue) As P_NetWeight,' +
+  Result := ' Select pl.*,(P_MValue-P_PValue-isnull(P_KZValue,0)) As P_NetWeight,' +
             ' (P_MValue-P_PValue-isnull(P_KZValue,0)-P_OldValue) as P_FZValue,'+
-            ' (P_MValue-P_PValue-isnull(P_KZValue,0)) As P_NetWeightEx, '+
-            ' (P_MValue - isnull(P_KZValue,0)) as P_MValueEx, ' +
-            ' case When isnull(P_KZValue,0) = 0 then ''否'' else ''是'' end IsKZ, '+
-            ' ABS((P_MValue-P_PValue)-P_LimValue) As P_Wucha, '+
-            ' (Select D_KD from P_OrderDtl where D_ID = pl.P_Order) as D_KD, '+
-            ' (Select D_SerialNo from P_OrderDtl where D_ID = pl.P_Order) as D_SerialNo,'+
-            ' '''+EditDate.Text+''' as P_BetweenTime From $PL pl ) A ';
+            ' (P_MValue - isnull(P_KZValue,0)) As P_MValueEx, ' +
+            ' ABS((P_MValue-P_PValue)-P_LimValue) As P_Wucha '+
+            ' From $PL pl';
   //xxxxx
 
   if FJBWhere = '' then
   begin
 //    Result := Result + ' Where  ' +
-//              ' (isnull(P_MDate,P_PDate) >=''$S'' and isnull(P_MDate,P_PDate)<''$E'') and (isnull(P_IsKS,''N'') <> ''Y'') ';
-
-    Result := Result + ' Where  ' +
-              ' (P_TwoDate >=''$S'' and P_TwoDate <''$E'') and (isnull(P_IsKS,''N'') <> ''Y'') ';
+//              ' (isnull(P_MDate,P_PDate) >=''$S'' and isnull(P_MDate,P_PDate)<''$E'') and (isnull(P_TwoState,''N'') = ''Y'') and P_Type = ''P'' ';
+    Result := Result + ' Where ' +
+              ' (P_PDate >= ''$S'' and P_PDate < ''$E'') and (isnull(P_TwoState,''N'') = ''Y'') and P_Type = ''P'' ';
   end else
   begin
-    Result := Result + ' Where (' + FJBWhere + ') and (isnull(P_IsKS,''N'') <> ''Y'') ';
+    Result := Result + ' Where (' + FJBWhere + ')  and (isnull(P_TwoState,''N'') = ''Y'' and P_Type = ''P'' ';
   end;
 
   if CheckDelete.Checked then
@@ -172,20 +163,20 @@ begin
   //xxxxx
 end;
 
-procedure TfFramePoundQuery.AfterInitFormData;
+procedure TfFramePoundQueryGY.AfterInitFormData;
 begin
   FJBWhere := '';
 end;
 
 //Desc: 日期筛选
-procedure TfFramePoundQuery.EditDatePropertiesButtonClick(Sender: TObject;
+procedure TfFramePoundQueryGY.EditDatePropertiesButtonClick(Sender: TObject;
   AButtonIndex: Integer);
 begin
   if ShowDateFilterForm(FStart, FEnd) then InitFormData(FWhere);
 end;
 
 //Desc: 执行查询
-procedure TfFramePoundQuery.EditTruckPropertiesButtonClick(Sender: TObject;
+procedure TfFramePoundQueryGY.EditTruckPropertiesButtonClick(Sender: TObject;
   AButtonIndex: Integer);
 begin
   if Sender = EditPID then
@@ -227,20 +218,20 @@ begin
   end;
 end;
 
-procedure TfFramePoundQuery.CheckDeleteClick(Sender: TObject);
+procedure TfFramePoundQueryGY.CheckDeleteClick(Sender: TObject);
 begin
   BtnRefresh.Click;
 end;
 
 //------------------------------------------------------------------------------
 //Desc: 权限控制
-procedure TfFramePoundQuery.PMenu1Popup(Sender: TObject);
+procedure TfFramePoundQueryGY.PMenu1Popup(Sender: TObject);
 begin
   N3.Enabled := BtnPrint.Enabled and (not CheckDelete.Checked);
 end;
 
 //Desc: 打印磅单
-procedure TfFramePoundQuery.N3Click(Sender: TObject);
+procedure TfFramePoundQueryGY.N3Click(Sender: TObject);
 var
   nStr: string;
 begin
@@ -257,7 +248,7 @@ begin
 end;
 
 //Desc: 时间段查询
-procedure TfFramePoundQuery.N2Click(Sender: TObject);
+procedure TfFramePoundQueryGY.N2Click(Sender: TObject);
 begin
   if ShowDateFilterForm(FTimeS, FTimeE, True) then
   try
@@ -278,7 +269,7 @@ begin
 end;
 
 //Desc: 删除榜单
-procedure TfFramePoundQuery.BtnDelClick(Sender: TObject);
+procedure TfFramePoundQueryGY.BtnDelClick(Sender: TObject);
 var nIdx: Integer;
     nStr,nID,nP: string;
     nParm: TFormCommandParam;
@@ -343,7 +334,7 @@ begin
 end;
 
 //Desc: 查看抓拍
-procedure TfFramePoundQuery.N4Click(Sender: TObject);
+procedure TfFramePoundQueryGY.N4Click(Sender: TObject);
 var nStr,nID,nDir: string;
     nPic: TPicture;
 begin
@@ -400,7 +391,7 @@ begin
   end;
 end;
 
-procedure TfFramePoundQuery.N6Click(Sender: TObject);
+procedure TfFramePoundQueryGY.N6Click(Sender: TObject);
 var nStr: string;
     nIdx,nType: Integer;
     nList: TStrings;
@@ -434,7 +425,7 @@ begin
   end;
 end;
 
-procedure TfFramePoundQuery.cxView1DblClick(Sender: TObject);
+procedure TfFramePoundQueryGY.cxView1DblClick(Sender: TObject);
 var nStr: string;
     nP: TFormCommandParam;
 begin
@@ -460,7 +451,7 @@ begin
   end;
 end;
 
-procedure TfFramePoundQuery.N10Click(Sender: TObject);
+procedure TfFramePoundQueryGY.N10Click(Sender: TObject);
 var
   nID   : string;
   nList : TStrings;
@@ -498,7 +489,7 @@ begin
   end;
 end;
 
-procedure TfFramePoundQuery.N11Click(Sender: TObject);
+procedure TfFramePoundQueryGY.N11Click(Sender: TObject);
 var
   i : Integer;
   nValue: Double;
@@ -534,50 +525,8 @@ begin
       FDM.ExecuteSQL(nStr);
     end;
   end;
-  ShowMsg('审核成功', sHint);
-end;
-
-procedure TfFramePoundQuery.N12Click(Sender: TObject);
-var
-  i : Integer;
-  nValue: Double;
-  nStr,nID:   string;
-  nList : TStrings;
-  nP: TFormCommandParam;
-begin
-  inherited;
-  if cxView1.DataController.GetSelectedCount < 1 then
-  begin
-    ShowMsg('请选择要输入原厂净重的记录', sHint);
-    Exit;
-  end;
-
-  if (Trim(SQLQuery.FieldByName('P_TYPE').AsString) <> 'P') then
-  begin
-    ShowMsg('不是采购业务', sHint);
-    Exit;
-  end;
-  
-  nID := SQLQuery.FieldByName('P_ID').AsString;
-
-  nList := TStringList.Create;
-  try
-    nList.Add(nID);
-
-    nP.FCommand := cCmd_EditData;
-    nP.FParamA := nList.Text;
-    CreateBaseFormItem(cFI_FormPoundOldValue, '', @nP);
-
-    if (nP.FCommand = cCmd_ModalResult) and (nP.FParamA = mrOK) then
-    begin
-      InitFormData(FWhere);
-    end;
-
-  finally
-    nList.Free;
-  end;
 end;
 
 initialization
-  gControlManager.RegCtrl(TfFramePoundQuery, TfFramePoundQuery.FrameID);
+  gControlManager.RegCtrl(TfFramePoundQueryGY, TfFramePoundQueryGY.FrameID);
 end.

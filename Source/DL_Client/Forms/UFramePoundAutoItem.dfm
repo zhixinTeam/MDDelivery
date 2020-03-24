@@ -1,5 +1,5 @@
 inherited fFrameAutoPoundItem: TfFrameAutoPoundItem
-  Width = 1019
+  Width = 1249
   Height = 309
   Font.Height = -15
   object GroupBox1: TGroupBox
@@ -188,8 +188,8 @@ inherited fFrameAutoPoundItem: TfFrameAutoPoundItem
     Properties.Alignment.Vert = taVCenter
     Properties.LabelStyle = cxlsRaised
     Height = 27
-    Width = 1019
-    AnchorX = 510
+    Width = 1249
+    AnchorX = 625
     AnchorY = 14
   end
   object EditTruck: TcxComboBox
@@ -593,6 +593,24 @@ inherited fFrameAutoPoundItem: TfFrameAutoPoundItem
     ParentFont = False
     ScrollBars = ssVertical
     TabOrder = 24
+  end
+  object btnQiangan: TBitBtn
+    Left = 995
+    Top = 49
+    Width = 75
+    Height = 25
+    Caption = #25260#21069#26438
+    TabOrder = 25
+    OnClick = btnQianganClick
+  end
+  object btnhougan: TBitBtn
+    Left = 995
+    Top = 93
+    Width = 75
+    Height = 25
+    Caption = #25260#21518#26438
+    TabOrder = 26
+    OnClick = btnhouganClick
   end
   object Timer1: TTimer
     OnTimer = Timer1Timer

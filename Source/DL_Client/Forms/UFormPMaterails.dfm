@@ -188,6 +188,7 @@ inherited fFormMaterails: TfFormMaterails
     object EditAutoKZ: TcxComboBox
       Left = 81
       Top = 161
+      ParentFont = False
       Properties.Items.Strings = (
         'N'#12289#21542
         'Y'#12289#26159)

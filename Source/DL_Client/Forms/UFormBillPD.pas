@@ -268,8 +268,8 @@ begin
   FStockName := Copy(EditStockName.Text,Pos(';',EditStockName.Text)+1, MaxInt);
 
 
-  nStr := 'Select count(*) From %s Where isnull(L_HdOrderId,'''') <> '''' ';
-  nStr := Format(nStr, [sTable_Bill]);
+  nStr := 'Select count(*) From %s Where isnull(L_HdOrderId,'''') <> '''' and L_ID = ''%s'' ';
+  nStr := Format(nStr, [sTable_Bill,EditLID.Text]);
 
   with FDM.QueryTemp(nStr) do
   begin
@@ -304,7 +304,8 @@ begin
     begin
       Values['Bills']   := PackerEncodeStr(nList.Text);
       Values['ZhiKa']   := Trim(EditZhiKa.Text);
-      Values['Truck']   := '888888';
+//      Values['Truck']   := '888888';
+      Values['Truck']   := EditTruck.Text;
       Values['Ident']   := '';
       Values['SJName']  := '';
       Values['L_XHSpot']:= FXHSpot;
@@ -328,18 +329,18 @@ begin
   end;
   if FNewLID = '' then Exit;
   
-  nStr := ' Update %s Set  L_Truck = ''%s'',L_Card = ''%s''  Where L_ID = ''%s'' ';
-  nStr := Format(nStr, [sTable_Bill, EditTruck.Text, FCard, FNewLID]);
+  nStr := ' Update %s Set  L_Truck = ''%s'',L_Card = ''%s'', L_HdOrderId = ''%s''  Where L_ID = ''%s'' ';
+  nStr := Format(nStr, [sTable_Bill, EditTruck.Text, FCard, EditZhiKa.Text, FNewLID]);
   FDM.ExecuteSQL(nStr);
 
-  nStr := ' Update %s Set  T_Truck = ''%s''   Where T_Truck = ''%s'' ';
-  nStr := Format(nStr, [sTable_ZTTrucks, EditTruck.Text, '888888']);
-  FDM.ExecuteSQL(nStr);
+//  nStr := ' Update %s Set  T_Truck = ''%s''   Where T_Truck = ''%s'' ';
+//  nStr := Format(nStr, [sTable_ZTTrucks, EditTruck.Text, '888888']);
+//  FDM.ExecuteSQL(nStr);
 
   nStr := ' Update %s Set L_HdOrderId = ''%s'' Where L_ID = ''%s'' ';
   nStr := Format(nStr, [sTable_Bill, EditZhiKa.Text, EditLID.Text]);
   FDM.ExecuteSQL(nStr);
-  
+
   ShowMsg('Æ´µ¥³É¹¦', sHint);
   ModalResult := mrOk;
 end;

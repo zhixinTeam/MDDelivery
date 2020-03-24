@@ -47,11 +47,14 @@ const
   cFI_FramePoundQuery   = $0031;                     //磅房查询
   cFI_FramePoundQueryKS = $0038;                     //矿山磅房查询
   cFI_FramePoundQueryKZ = $0037;                     //化验室一次扣重
+  cFI_FramePoundQueryGY = $8031;                     //供应称量查询
   cFI_FrameFangHuiQuery = $0032;                     //放灰查询
   cFI_FrameZhanTaiQuery = $0033;                     //栈台查询
   cFI_FrameZTDispatch   = $0034;                     //栈台调度
   cFI_FramePoundManual  = $0035;                     //手动称重
   cFI_FramePoundAuto    = $0036;                     //自动称重
+
+  cFI_FormKSKD          = $8036;                     //矿山扣吨规则
 
   cFI_FramePoundMtAuto  = $0040;                     //码头抓斗秤
   cFI_FramePoundMtQuery = $0041;                     //码头抓斗秤查询
@@ -156,7 +159,8 @@ const
   cFI_FormGetMeterail   = $1042;                     //选择原材料
   cFI_FormTruckEmpty    = $1043;                     //空车出厂
   cFI_FormReadCard      = $1044;                     //读取磁卡
-  cFI_FormZTLine        = $1045;                     //装车线   
+  cFI_FormZTLine        = $1045;                     //装车线
+  cFI_FormGetPayingUnit = $8046;                     //选择交货单位
 
   cFI_FormGetTruck      = $1047;                     //选择车辆
   cFI_FormGetContract   = $1048;                     //选择合同
@@ -226,8 +230,9 @@ const
   cFI_FrameQrySaleByMonth    = $1121;                //按月统计销售数据
   cFI_FramePurchByMonth      = $1122;                //按月统计采购数据
 
-  cFI_FormPoundKZ   = $6011;                         //原材料一次扣杂
-  cFI_FormPoundTwoKZ= $6012;                         //磅房二次扣杂
+  cFI_FormPoundKZ       = $6011;                     //原材料一次扣杂
+  cFI_FormPoundTwoKZ    = $6012;                     //磅房二次扣杂
+  cFI_FormPoundOldValue = $6013;                     //原厂净重
 
   {*Command*}
   cCmd_RefreshData      = $0002;                     //刷新数据
@@ -445,6 +450,9 @@ begin
   AddMenuModuleItem('MAIN_K07', cFI_FrameBatch);
   AddMenuModuleItem('MAIN_K08', cFI_FormBatch, mtForm);
   AddMenuModuleItem('MAIN_K09', cFI_FramePoundQueryKZ);
+
+  AddMenuModuleItem('MAIN_K10', cFI_FramePoundQueryGY);
+  AddMenuModuleItem('MAIN_K11', cFI_FormKSKD, mtForm);
 
   AddMenuModuleItem('MAIN_L01', cFI_FrameTruckQuery);
   AddMenuModuleItem('MAIN_L02', cFI_FrameCusAccountQuery);

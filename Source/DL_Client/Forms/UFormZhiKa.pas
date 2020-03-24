@@ -111,6 +111,7 @@ type
     //基类方法
     procedure InitFormData(const nID: string);
     //载入数据
+    function IsRepeatZhiKaID(const nCusID,nPayment:string):Boolean;
     procedure LoadStockList;
     procedure LoadStockListSummary;
     //水泥列表
@@ -781,7 +782,7 @@ begin
     ShowMsg('请保持纸卡名称与付款方式一致.',sHint);
     Exit;
   end;
-
+  
   {$IFDEF UseFreight}
   if GetCtrlData(EditLading) = sFlag_SongH then
   begin
@@ -799,6 +800,16 @@ begin
          nCID := GetCtrlData(EditCustom)
     else nCID := SaveXuNiCustomer(EditCustom.Text, GetCtrlData(EditSMan));
   end else nCID := FZhiKa.FCustomer;
+
+  //判断是否存在相同纸卡
+  if FRecordID = '' then
+  begin
+    if IsRepeatZhiKaID(nCID,EditPayment.Text) then
+    begin
+      EditName.SetFocus;
+      ShowMsg('此客户已经存在相同类型的纸卡', sHint); Exit;
+    end;
+  end;
 
   if FRecordID = '' then
   begin
@@ -948,6 +959,23 @@ begin
   if Trim(EditName.Text) <> '' then
   begin
     EditPayment.Text := EditName.Text;
+  end;
+end;
+
+function TfFormZhiKa.IsRepeatZhiKaID(const nCusID, nPayment: string): Boolean;
+var
+  nStr:string;
+begin
+  Result := False;
+  nStr := ' Select Z_ID from %s where Z_Customer = ''%s'' and isnull(Z_InValid,''N'') <> ''Y''  and Z_PayType '+
+          ' in (Select distinct D_Index from Sys_Dict where D_Name= ''PaymentItem'' and D_Value = ''%s'')';
+  nStr := Format(nStr,[sTable_ZhiKa,nCusID,nPayment]);
+  with fdm.QueryTemp(nStr) do
+  begin
+    if RecordCount>0 then
+    begin
+      Result := True;
+    end;
   end;
 end;
 

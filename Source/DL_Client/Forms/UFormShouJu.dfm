@@ -1,7 +1,7 @@
 inherited fFormShouJu: TfFormShouJu
-  Left = 684
-  Top = 370
-  ClientHeight = 282
+  Left = 634
+  Top = 211
+  ClientHeight = 395
   ClientWidth = 512
   OnClose = FormClose
   OnCreate = FormCreate
@@ -9,16 +9,16 @@ inherited fFormShouJu: TfFormShouJu
   TextHeight = 12
   inherited dxLayout1: TdxLayoutControl
     Width = 512
-    Height = 282
+    Height = 395
     inherited BtnOK: TButton
       Left = 366
-      Top = 249
-      TabOrder = 11
+      Top = 362
+      TabOrder = 13
     end
     inherited BtnExit: TButton
       Left = 436
-      Top = 249
-      TabOrder = 12
+      Top = 362
+      TabOrder = 14
     end
     object EditDate: TcxDateEdit [2]
       Left = 81
@@ -116,13 +116,13 @@ inherited fFormShouJu: TfFormShouJu
     end
     object EditMemo: TcxMemo [11]
       Left = 81
-      Top = 181
+      Top = 261
       Hint = 'T.S_Memo'
       ParentFont = False
       Properties.MaxLength = 50
       Properties.ScrollBars = ssVertical
       Style.Edges = [bBottom]
-      TabOrder = 10
+      TabOrder = 12
       Height = 46
       Width = 403
     end
@@ -138,6 +138,22 @@ inherited fFormShouJu: TfFormShouJu
       Properties.MaxLength = 35
       TabOrder = 4
       Width = 121
+    end
+    object EditPayingMan: TcxTextEdit [13]
+      Left = 81
+      Top = 181
+      Hint = 'T.S_PayingMan'
+      ParentFont = False
+      TabOrder = 10
+      Width = 121
+    end
+    object EditPriceStock: TcxMemo [14]
+      Left = 81
+      Top = 206
+      Hint = 'T.S_PriceStock'
+      TabOrder = 11
+      Height = 50
+      Width = 408
     end
     inherited dxLayout1Group_Root: TdxLayoutGroup
       inherited dxGroup1: TdxLayoutGroup
@@ -222,6 +238,16 @@ inherited fFormShouJu: TfFormShouJu
                 Control = EditBig
                 ControlOptions.ShowBorder = False
               end
+            end
+            object dxLayout1Item14: TdxLayoutItem
+              Caption = #20132' '#27454' '#20154':'
+              Control = EditPayingMan
+              ControlOptions.ShowBorder = False
+            end
+            object dxLayout1Item15: TdxLayoutItem
+              Caption = #21697#31181#21333#20215':'
+              Control = EditPriceStock
+              ControlOptions.ShowBorder = False
             end
             object dxLayout1Item12: TdxLayoutItem
               Caption = #22791#27880#20449#24687':'

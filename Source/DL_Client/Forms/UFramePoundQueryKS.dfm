@@ -247,5 +247,9 @@ inherited fFramePoundQueryKS: TfFramePoundQueryKS
       Caption = #30917#25151#20108#27425#25187#37325
       OnClick = N10Click
     end
+    object N11: TMenuItem
+      Caption = #20108#27425#25187#37325#23457#26680
+      OnClick = N11Click
+    end
   end
 end

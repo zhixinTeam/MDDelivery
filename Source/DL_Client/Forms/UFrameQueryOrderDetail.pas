@@ -118,8 +118,10 @@ begin
   {$ENDIF}
 
   EditDate.Text := Format('%s жа %s', [Date2Str(FStart), Date2Str(FEnd)]);
-  Result := 'Select *,(D_MValue-D_PValue-isnull(D_KZValue,0)) as D_NetWeight ' +
-            'From $OD od Inner Join $OO oo on od.D_OID=oo.O_ID ';
+  Result := 'Select *,(D_MValue-D_PValue) as D_NetWeight, ' +
+            '(D_MValue-D_PValue-isnull(D_KZValue,0)) as D_NetWeightEx,'+
+            '(D_MValue-isnull(D_KZValue,0)) as D_MValueEx,'+
+            ' '''+EditDate.Text+''' as P_BetweenTime From $OD od Inner Join $OO oo on od.D_OID=oo.O_ID ';
   //xxxxxx
 
   if FJBWhere = '' then

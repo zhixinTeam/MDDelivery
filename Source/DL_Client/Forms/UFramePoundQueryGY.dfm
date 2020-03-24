@@ -1,4 +1,4 @@
-inherited fFramePoundQuery: TfFramePoundQuery
+inherited fFramePoundQueryGY: TfFramePoundQueryGY
   Width = 976
   Height = 582
   inherited ToolBar1: TToolBar
@@ -186,7 +186,7 @@ inherited fFramePoundQuery: TfFramePoundQuery
   inherited TitlePanel1: TZnBitmapPanel
     Width = 976
     inherited TitleBar: TcxLabel
-      Caption = #30917#25151#31216#37327#26597#35810
+      Caption = #20379#24212#31216#37327#26597#35810
       Style.IsFontAssigned = True
       Width = 976
       AnchorX = 488
@@ -250,10 +250,6 @@ inherited fFramePoundQuery: TfFramePoundQuery
     object N11: TMenuItem
       Caption = #20108#27425#25187#37325#23457#26680
       OnClick = N11Click
-    end
-    object N12: TMenuItem
-      Caption = #21407#21378#20928#37325
-      OnClick = N12Click
     end
   end
 end

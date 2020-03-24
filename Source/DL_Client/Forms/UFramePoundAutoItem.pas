@@ -13,7 +13,7 @@ uses
   cxLookAndFeels, cxLookAndFeelPainters, cxContainer, cxEdit, StdCtrls,
   UTransEdit, ExtCtrls, cxRadioGroup, cxTextEdit, cxMaskEdit,
   cxDropDownEdit, cxLabel, ULEDFont, DateUtils, dxSkinsCore,
-  dxSkinsDefaultPainters;
+  dxSkinsDefaultPainters, Buttons;
 
 type
   TfFrameAutoPoundItem = class(TBaseFrame)
@@ -59,12 +59,16 @@ type
     TimerDelay: TTimer;
     MemoLog: TZnTransMemo;
     Timer_SaveFail: TTimer;
+    btnQiangan: TBitBtn;
+    btnhougan: TBitBtn;
     procedure Timer1Timer(Sender: TObject);
     procedure Timer2Timer(Sender: TObject);
     procedure Timer_ReadCardTimer(Sender: TObject);
     procedure TimerDelayTimer(Sender: TObject);
     procedure Timer_SaveFailTimer(Sender: TObject);
     procedure EditBillKeyPress(Sender: TObject; var Key: Char);
+    procedure btnQianganClick(Sender: TObject);
+    procedure btnhouganClick(Sender: TObject);
   private
     { Private declarations }
     FCardUsed: string;
@@ -92,6 +96,7 @@ type
     //是否采用道闸
     FAutoTruckOut : Boolean;
     //是否自动出厂
+    FRFID,FRFIDEx : string; 
     FSaveResult: Boolean;
     //保存结果
     FEmptyPoundInit, FDoneEmptyPoundInit: Int64;
@@ -162,6 +167,8 @@ begin
   FLEDContent := '';
   FEmptyPoundInit := 0;
   FLogin := -1;
+  btnQiangan.Visible := True;
+  btnhougan.Visible  := True;
 end;
 
 procedure TfFrameAutoPoundItem.OnDestroyFrame;
@@ -263,6 +270,8 @@ begin
     WriteLog('通道:'+ FPoundTunnel.FID+'初始化成功,登陆ID:'+IntToStr(FLogin));
   {$ENDIF}
   FAutoTruckOut := False;
+  FRFID   := '';
+  FRFIDEx := '';
   if Assigned(FPoundTunnel.FOptions) then
   with FPoundTunnel.FOptions do
   begin
@@ -272,6 +281,8 @@ begin
     FEmptyPoundIdleShort:= StrToInt64Def(Values['EmptyIdleShort'], 5);
 
     FAutoTruckOut := Values['AutoTruckOut'] = sFlag_Yes;
+    FRFID         := Values['rfid'];
+    FRFIDEx       := Values['rfidex'];
   end;
 end;
 
@@ -643,7 +654,7 @@ begin
   Timer_ReadCard.Enabled := False;
   FDoneEmptyPoundInit := 0;
   FIsWeighting := True;
-  FSaveResult := True;
+  FSaveResult  := True;
   //停止读卡,开始称重
 
   if FBarrierGate then
@@ -664,9 +675,28 @@ begin
     //读卡成功，语音提示
 
     {$IFNDEF DEBUG}
-    for nIdx := 0 to 2 do
+    if (Trim(FRFID) <> '') and (Trim(FRFIDEx) = '') then
+    begin
+      OpenDoorByReader(FRFID);
+    end
+    else if (Trim(FRFID) <> '') and (Trim(FRFIDEx) <> '') then
+    begin
+      if Trim(FLastReader) = Trim(FRFID) then
+      begin
+        if Trim(FRFID) <> '' then
+          OpenDoorByReader(FRFID);
+      end
+      else
+      begin
+        if Trim(FRFIDEx) <> '' then
+          OpenDoorByReader(FRFIDEx);
+      end;
+    end;
+    for nIdx := 0 to 1 do
     begin
       OpenDoorByReader(FLastReader);
+      Sleep(500);
+      Application.ProcessMessages;
     end;
     //打开主道闸
     {$ENDIF}
@@ -771,6 +801,9 @@ begin
               '是否继续保存?';
       nStr := Format(nStr, [FUIData.FTruck, FUIData.FPData.FValue,
               nNet, nVal]);
+
+      WriteSysLog(nStr);
+      
       if not QueryDlg(nStr, sAsk) then Exit;
       {$ELSE}
       nStr := '车辆[ %s ]实时皮重误差较大,详情如下:' + #13#10 +
@@ -1084,8 +1117,15 @@ begin
   end;
   
   if FCardUsed = sFlag_Provide then
-       Result := SavePurchaseOrders(nNextStatus, FBillItems,FPoundTunnel, FLogin)
-  else Result := SaveDuanDaoItems(nNextStatus, FBillItems, FPoundTunnel, FLogin);
+  begin
+    FSaveResult := SavePurchaseOrders(nNextStatus, FBillItems,FPoundTunnel, FLogin);
+    Result      := FSaveResult;
+  end
+  else
+  begin
+    FSaveResult := SaveDuanDaoItems(nNextStatus, FBillItems, FPoundTunnel, FLogin);
+    Result      := FSaveResult;
+  end;
   //保存称重
   //Result := SavePurchaseOrders(nNextStatus, FBillItems,FPoundTunnel)
   if gSysParam.FIsKS = 1 then
@@ -1259,6 +1299,8 @@ begin
   end;
 
   FIsSaving := True;
+  nStr := '保存前：'+ GetTruckNO(FUIData.FTruck) + '重量:' + GetValue(nValue);
+  WriteSysLog(nStr);
 //  if FCardUsed = sFlag_Provide then
 //       nRet := SavePoundData
 //  else nRet := SavePoundSale;
@@ -1269,6 +1311,9 @@ begin
 
   if nRet then
   begin
+    nStr := '保存后：'+ GetTruckNO(FUIData.FTruck) + '重量:' + GetValue(nValue);
+    WriteSysLog(nStr);
+
     {$IFDEF XXMD}
     if (FCardUsed = sFlag_Sale) and (FBillItems[0].FType = sFlag_Dai)
        and (FBillItems[0].FNextStatus = sFlag_TruckBFM) then
@@ -1306,6 +1351,7 @@ begin
     if not FSaveResult then
     begin
       nStr := GetTruckNO(FUIData.FTruck) + '数据保存失败';
+      WriteSysLog(nStr);
       {$IFDEF MITTruckProber}
       ProberShowTxt(FPoundTunnel.FID, nStr);
       {$ELSE}
@@ -1320,9 +1366,28 @@ begin
 
   if FBarrierGate and FSaveResult then
   begin
-    for nIdx := 0 to 2 do
+    if (Trim(FRFID) <> '') and (Trim(FRFIDEx) = '') then
+    begin
+      OpenDoorByReader(FRFID, sFlag_No);
+    end
+    else if (Trim(FRFID) <> '') and (Trim(FRFIDEx) <> '') then
+    begin
+      if Trim(FLastReader) = Trim(FRFID) then
+      begin
+        if Trim(FRFID) <> '' then
+          OpenDoorByReader(FRFID, sFlag_No);
+      end
+      else
+      begin
+        if Trim(FRFIDEx) <> '' then
+          OpenDoorByReader(FRFIDEx, sFlag_No);
+      end;
+    end;
+    for nIdx := 0 to 1 do
     begin
       OpenDoorByReader(FLastReader, sFlag_No);
+      Sleep(500);
+      Application.ProcessMessages;
     end;
     //打开副道闸
   end;
@@ -1511,6 +1576,26 @@ begin
     FIsChkPoundStatus:= False;
     SetUIData(True);
   end;
+end;
+
+procedure TfFrameAutoPoundItem.btnQianganClick(Sender: TObject);
+var nReader:string;
+begin
+  nReader := FRFID;
+  if nReader='' then
+    nReader := FLastReader;
+
+  OpenDoorByReader(nReader);
+end;
+
+procedure TfFrameAutoPoundItem.btnhouganClick(Sender: TObject);
+var nReader:string;
+begin
+  nReader := FRFID;
+  if nReader='' then
+    nReader := FLastReader;
+
+  OpenDoorByReader(nReader, sFlag_No);
 end;
 
 end.

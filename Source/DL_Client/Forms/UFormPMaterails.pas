@@ -336,7 +336,7 @@ end;
 
 //Desc: 保存数据
 procedure TfFormMaterails.BtnOKClick(Sender: TObject);
-var nStr,nID,nTmp,nSQL: string;
+var nStr,nID,nTmp,nSQL,nPY,nIDLength: string;
     i,nPos,nCount: Integer;
     nList: TStrings;
 begin
@@ -358,9 +358,21 @@ begin
   end
   else
   begin
-    {$IFDEF InfoOnly}
     if FRecordID = '' then
     begin
+      nStr := 'Select Count(*) From %s Where M_ID=''%s''';
+      nStr := Format(nStr, [sTable_Materails, EditID.Text]);
+      //xxxxx
+
+      with FDM.QueryTemp(nStr) do
+      if Fields[0].AsInteger > 0 then
+      begin
+        nStr := '物料编号[ %s ]重复';
+        nStr := Format(nStr, [EditID.Text]);
+        ShowMsg(nStr, sHint);
+        Exit;
+      end;
+
       nStr := 'Select Count(*) From %s Where M_Name=''%s''';
       nStr := Format(nStr, [sTable_Materails, EditName.Text]);
       //xxxxx
@@ -374,7 +386,6 @@ begin
         Exit;
       end;
     end;
-    {$ENDIF}
   end;
 
   if not IsNumber(EditPrice.Text, True) then
@@ -436,7 +447,22 @@ begin
     FDM.ExecuteSQL(nSQL);
     if FRecordID = '' then
     begin
-      nID := EditID.Text;
+      nID      := EditID.Text;
+      nPY      := UpperCase(GetPinYinOfStr(EditName.Text)) ;
+      nIDLength:= IntToStr(Length(nPY)+9);
+      //判断批次规则是否存在
+      nStr := 'Select B_Object From %s Where B_Object = ''%s'' ';
+      nStr := Format(nStr, [sTable_SerialBase, nID]);
+      
+      with FDM.QueryTemp(nStr) do
+      if RecordCount = 0 then
+      begin
+        nSQL := 'Insert Into %s(B_Group, B_Object, B_Prefix, B_IDLen,B_Base,B_Date) ' +
+                ' Values(''%s'', ''%s'', ''%s'', ''%s'', ''%s'', %s)';
+        nSQL := Format(nSQL, [sTable_SerialBase, sFlag_BusGroup, nID,nPY,nIDLength,'1',sField_SQLServer_Now]);
+        FDM.ExecuteSQL(nSQL);
+      end;
+
     end else
     begin
       nID := FRecordID;

@@ -59,11 +59,11 @@ inherited fFrameOrderDetail: TfFrameOrderDetail
       Top = 93
       Hint = 'T.O_ProName'
       ParentFont = False
-      TabOrder = 7
+      TabOrder = 8
       Width = 105
     end
     object EditDate: TcxButtonEdit [1]
-      Left = 615
+      Left = 705
       Top = 36
       ParentFont = False
       Properties.Buttons = <
@@ -73,7 +73,7 @@ inherited fFrameOrderDetail: TfFrameOrderDetail
         end>
       Properties.ReadOnly = True
       Properties.OnButtonClick = EditDatePropertiesButtonClick
-      TabOrder = 3
+      TabOrder = 4
       Width = 185
     end
     object EditCustomer: TcxButtonEdit [2]
@@ -95,7 +95,7 @@ inherited fFrameOrderDetail: TfFrameOrderDetail
       Top = 93
       Hint = 'T.D_NetWeight'
       ParentFont = False
-      TabOrder = 6
+      TabOrder = 7
       Width = 115
     end
     object cxtxtdt3: TcxTextEdit [4]
@@ -103,7 +103,7 @@ inherited fFrameOrderDetail: TfFrameOrderDetail
       Top = 93
       Hint = 'T.D_ID'
       ParentFont = False
-      TabOrder = 4
+      TabOrder = 5
       Width = 115
     end
     object cxtxtdt4: TcxTextEdit [5]
@@ -111,7 +111,7 @@ inherited fFrameOrderDetail: TfFrameOrderDetail
       Top = 93
       Hint = 'T.O_StockName'
       ParentFont = False
-      TabOrder = 5
+      TabOrder = 6
       Width = 115
     end
     object EditTruck: TcxButtonEdit [6]
@@ -142,6 +142,19 @@ inherited fFrameOrderDetail: TfFrameOrderDetail
       OnKeyPress = OnCtrlKeyPress
       Width = 115
     end
+    object chkTime: TcxComboBox [8]
+      Left = 557
+      Top = 36
+      ParentFont = False
+      Properties.DropDownListStyle = lsFixedList
+      Properties.Items.Strings = (
+        #20197#36827#21378#26102#38388
+        #20197#20108#27425#36807#30917#26102#38388)
+      Properties.OnChange = chkTimePropertiesChange
+      TabOrder = 3
+      Text = #20197#20108#27425#36807#30917#26102#38388
+      Width = 85
+    end
     inherited dxGroup1: TdxLayoutGroup
       inherited GroupSearch1: TdxLayoutGroup
         object dxLayout1Item7: TdxLayoutItem
@@ -157,6 +170,10 @@ inherited fFrameOrderDetail: TfFrameOrderDetail
         object dxLayout1Item8: TdxLayoutItem
           Caption = #20379' '#24212' '#21830':'
           Control = EditCustomer
+          ControlOptions.ShowBorder = False
+        end
+        object dxLayout1Item9: TdxLayoutItem
+          Control = chkTime
           ControlOptions.ShowBorder = False
         end
         object dxLayout1Item6: TdxLayoutItem
@@ -206,7 +223,7 @@ inherited fFrameOrderDetail: TfFrameOrderDetail
     end
   end
   object Check1: TcxCheckBox [5]
-    Left = 819
+    Left = 911
     Top = 92
     Caption = #26597#35810#24050#21024#38500
     ParentFont = False

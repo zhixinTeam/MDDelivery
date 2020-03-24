@@ -47,6 +47,7 @@ type
     N6: TMenuItem;
     N9: TMenuItem;
     N10: TMenuItem;
+    N11: TMenuItem;
     procedure EditDatePropertiesButtonClick(Sender: TObject;
       AButtonIndex: Integer);
     procedure EditTruckPropertiesButtonClick(Sender: TObject;
@@ -60,7 +61,9 @@ type
     procedure N6Click(Sender: TObject);
     procedure cxView1DblClick(Sender: TObject);
     procedure N10Click(Sender: TObject);
+    procedure N11Click(Sender: TObject);
   private
+    FNum1,Fnum2,FNum3: Double;
     { Private declarations }
   protected
     FStart,FEnd: TDate;
@@ -93,6 +96,8 @@ begin
 end;
 
 procedure TfFramePoundQueryKS.OnCreateFrame;
+var
+  nStr : string;
 begin
   inherited;
   FTimeS := Str2DateTime(Date2Str(Now) + ' 00:00:00');
@@ -100,6 +105,25 @@ begin
 
   FJBWhere := '';
   InitDateRange(Name, FStart, FEnd);
+
+  nStr := 'Select * From %s ';
+  nStr := Format(nStr, [sTable_KSKD]);
+  FDM.QueryTemp(nStr);
+  with FDM.SqlTemp do
+  begin
+    if (RecordCount < 1) then
+    begin
+      FNum1 := 0;
+      FNum2 := 0;
+      FNum3 := 0;
+    end
+    else
+    begin
+      FNum1 := FieldByName('P_Num1').AsFloat;
+      FNum2 := FieldByName('P_Num2').AsFloat;
+      FNum3 := FieldByName('P_Num3').AsFloat;
+    end;
+  end;
 end;
 
 procedure TfFramePoundQueryKS.OnDestroyFrame;
@@ -128,19 +152,39 @@ begin
   //启用备份数据库
 
   EditDate.Text := Format('%s 至 %s', [Date2Str(FStart), Date2Str(FEnd)]);
-
-  Result := ' Select pl.*,(P_MValue-P_PValue-isnull(P_KZValue,0)) As P_NetWeightEx,' +
-            ' case When (Select isnull(M_AutoKZ,''N'') from P_Materails where M_ID = pl.P_MID) = ''Y'' then ' +
-            ' (case When (P_MValue-P_PValue-isnull(P_KZValue,0)) >= 52.9 then 49.9 else (P_MValue-P_PValue-isnull(P_KZValue,0)-3) end) '+
-            ' else (P_MValue-P_PValue-isnull(P_KZValue,0)) end P_NetWeight,  '+
-            ' ABS((P_MValue-P_PValue)-P_LimValue) As P_Wucha, '+
-            ' (Select D_SerialNo from P_OrderDtl where D_ID = pl.P_Order) as D_SerialNo From $PL pl';
+  if FNum1 > 0 then
+  begin
+    Result := ' Select pl.*,' +
+              ' (P_MValue-P_PValue) As P_NetWeight,'+
+              ' case When (Select isnull(M_AutoKZ,''N'') from P_Materails where M_ID = pl.P_MID) = ''Y'' then ' +
+              ' (case When (P_MValue-P_PValue) >= '+Floattostr(FNum1)+' then P_PValue+'+Floattostr(FNum2)+
+              ' else (P_MValue-'+Floattostr(FNum3)+') end) '+
+              ' else (P_MValue-isnull(P_KZValue,0)) end P_MValueEx,  '+
+              ' case When isnull(P_KZValue,0) = 0 then ''否'' else ''是'' end IsKZ, '+
+              ' case When (Select isnull(M_AutoKZ,''N'') from P_Materails where M_ID = pl.P_MID) = ''Y'' then ' +
+              ' (case When (P_MValue-P_PValue) >= '+Floattostr(FNum1)+' then '+Floattostr(FNum2)+
+              ' else (P_MValue-P_PValue-'+Floattostr(FNum3)+') end) '+
+              ' else (P_MValue-P_PValue-isnull(P_KZValue,0)) end P_NetWeightEx,  '+
+              ' ABS((P_MValue-P_PValue)-P_LimValue) As P_Wucha, '+
+              ' (Select D_KD from P_OrderDtl where D_ID = pl.P_Order) as D_KD, '+
+              ' (Select D_SerialNo from P_OrderDtl where D_ID = pl.P_Order) as D_SerialNo From $PL pl';
+  end
+  else
+  begin
+    Result := ' Select pl.*,(P_MValue-P_PValue-isnull(P_KZValue,0)) As P_NetWeightEx,' +
+              ' (P_MValue-P_PValue) As P_NetWeight,'+
+              ' (P_MValue - isnull(P_KZValue,0)) as P_MValueEx, ' +
+              ' case When isnull(P_KZValue,0) = 0 then ''否'' else ''是'' end IsKZ, '+
+              ' ABS((P_MValue-P_PValue)-P_LimValue) As P_Wucha, '+
+              ' (Select D_KD from P_OrderDtl where D_ID = pl.P_Order) as D_KD, '+
+              ' (Select D_SerialNo from P_OrderDtl where D_ID = pl.P_Order) as D_SerialNo From $PL pl';  
+  end;
   //xxxxx
 
   if FJBWhere = '' then
   begin
-    Result := Result + ' Where ((P_PDate >=''$S'' and P_PDate<''$E'') or ' +
-              '(P_MDate >=''$S'' and P_MDate<''$E'')) and (isnull(P_IsKS,''N'') = ''Y'') and (P_Type = ''P'') ';
+    Result := Result + ' Where (P_PDate >=''$S'' and P_PDate<''$E'') ' +
+              ' and (isnull(P_IsKS,''N'') = ''Y'') and (P_Type = ''P'') ';
   end else
   begin
     Result := Result + ' Where (' + FJBWhere + ') and (isnull(P_IsKS,''N'') = ''Y'') and (P_Type = ''P'') ';
@@ -238,7 +282,7 @@ begin
     end;
 
     nStr := SQLQuery.FieldByName('P_ID').AsString;
-    PrintPoundReport(nStr, False);
+    PrintPoundReportKS(nStr, False);
   end
 end;
 
@@ -414,7 +458,7 @@ begin
     end;
 
     nStr := AdjustListStrFormat2(nList, '''', True, ',', False);
-    PrintPoundReport(nStr, False, True);
+    PrintPoundReportKS(nStr, False, True);
   finally
     nList.Free;
   end;
@@ -482,6 +526,45 @@ begin
   finally
     nList.Free;
   end;
+end;
+
+procedure TfFramePoundQueryKS.N11Click(Sender: TObject);
+var
+  i : Integer;
+  nValue: Double;
+  nStr,nLID:   string;
+begin
+  inherited;
+  if cxView1.DataController.GetSelectedCount < 1 then
+  begin
+    ShowMsg('请选择要审核的记录', sHint);
+    Exit;
+  end;
+  if not QueryDlg('确定要对选中的所有记录进行审核嘛？', sAsk) then Exit;
+  with cxView1.Controller do
+  begin
+    for i := 0 to SelectedRowCount - 1   do
+    begin
+      SelectedRows[i].Focused := True;
+      if (Trim(SQLQuery.FieldByName('P_TYPE').AsString) <> 'P') then
+      begin
+        if SelectedRowCount = 1 then
+        begin
+          ShowMsg('不是采购订单,无需审核', sHint);
+          Exit;
+        end
+        else
+          Continue;
+      end;
+
+      nLID := SQLQuery.FieldByName('R_ID').AsString;
+      nStr := 'Update %s Set P_TwoState=''%s'' Where R_ID=%s';
+      nStr := Format(nStr, [sTable_PoundLog, sFlag_Yes, nLID]);
+
+      FDM.ExecuteSQL(nStr);
+    end;
+  end;
+  ShowMsg('审核成功', sHint);
 end;
 
 initialization

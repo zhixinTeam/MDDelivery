@@ -86,6 +86,7 @@ inherited fFormOrderDtl: TfFormOrderDtl
       Top = 61
       Hint = 'D.D_ProName'
       ParentFont = False
+      Properties.ReadOnly = True
       TabOrder = 5
       Width = 121
     end
@@ -108,6 +109,7 @@ inherited fFormOrderDtl: TfFormOrderDtl
       Top = 36
       Hint = 'D.D_StockName'
       ParentFont = False
+      Properties.ReadOnly = True
       TabOrder = 4
       Width = 121
     end

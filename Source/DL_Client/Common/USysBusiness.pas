@@ -117,11 +117,15 @@ function IsAutoPayCredit: Boolean;
 function SaveCustomerPayment(const nCusID,nCusName,nSaleMan: string;
  const nType,nPayment,nMemo: string; const nMoney: Double;
  const nPrice: Double; const nStockName: string;
+ const nAcceptNum: string; const nPayingUnit: string;
+ const nPayingMan: string;
  const nCredit: Boolean = True): Boolean;
 //保存回款记录
 function SaveCustomerKPPayment(const nCusID,nCusName,nSaleMan: string;
  const nType,nPayment,nMemo: string; const nMoney: Double;
  const nPrice: Double; const nStockName: string;
+ const nAcceptNum: string; const nPayingUnit: string;
+ const nPayingMan: string;
  const nCredit: Boolean = True): Boolean;
 //保存回款记录
 function SaveCustomerCredit(const nCusID,nMemo: string; const nCredit: Double;
@@ -289,6 +293,9 @@ function PrintRCOrderReport(const nID: string;  const nAsk: Boolean): Boolean;
 function PrintPoundReport(const nPound: string; nAsk: Boolean;
                           const nMul: Boolean = False): Boolean;
 //打印榜单
+function PrintPoundReportKS(const nPound: string; nAsk: Boolean;
+                          const nMul: Boolean = False): Boolean;
+//打印矿山榜单
 function PrintHuaYanReport(const nHID: string; const nAsk: Boolean): Boolean;
 function PrintHeGeReport(const nHID: string; const nAsk: Boolean): Boolean;
 //化验单,合格证
@@ -1240,6 +1247,8 @@ end;
 function SaveCustomerPayment(const nCusID,nCusName,nSaleMan: string;
  const nType,nPayment,nMemo: string; const nMoney: Double;
  const nPrice: Double;  const nStockName: string;
+ const nAcceptNum: string; const nPayingUnit: string;
+ const nPayingMan: string;
  const nCredit: Boolean): Boolean;
 var nStr, nData, nSaleManName: string;
     nBool: Boolean;
@@ -1300,10 +1309,10 @@ begin
     FDM.ExecuteSQL(nStr);
 
     nStr := 'Insert Into %s(M_SaleMan,M_CusID,M_CusName,' +
-            'M_Type,M_Payment,M_Money,M_Date,M_Man,M_Memo,M_RuZhang,M_Price,M_PriceStock) ' +
-            'Values(''%s'',''%s'',''%s'',''%s'',''%s'',%.2f,%s,''%s'',''%s'',''%s'',%.2f,''%s'')';
+            'M_Type,M_Payment,M_Money,M_Date,M_Man,M_Memo,M_RuZhang,M_Price,M_PriceStock,M_AcceptNum,M_PayingUnit,M_PayingMan) ' +
+            'Values(''%s'',''%s'',''%s'',''%s'',''%s'',%.2f,%s,''%s'',''%s'',''%s'',%.2f,''%s'',''%s'',''%s'',''%s'')';
     nStr := Format(nStr, [sTable_InOutMoney, nSaleMan, nCusID, nCusName, nType,
-            nPayment, nVal, FDM.SQLServerNow, gSysParam.FUserID, nMemo, sFlag_Yes,nPrice,nStockName]);
+            nPayment, nVal, FDM.SQLServerNow, gSysParam.FUserID, nMemo, sFlag_Yes,nPrice,nStockName,nAcceptNum,nPayingUnit,nPayingMan]);
     FDM.ExecuteSQL(nStr);
 
     if (nLimit > 0) and (
@@ -1379,6 +1388,8 @@ end;
 function SaveCustomerKPPayment(const nCusID,nCusName,nSaleMan: string;
  const nType,nPayment,nMemo: string; const nMoney: Double;
  const nPrice: Double; const nStockName: string;
+ const nAcceptNum: string; const nPayingUnit: string;
+ const nPayingMan: string;
  const nCredit: Boolean): Boolean;
 var nStr, nData,nSaleManName : string;
     nBool: Boolean;
@@ -1439,10 +1450,10 @@ begin
     FDM.ExecuteSQL(nStr);
 
     nStr := 'Insert Into %s(M_SaleMan,M_CusID,M_CusName,' +
-            'M_Type,M_Payment,M_Money,M_Date,M_Man,M_Memo,M_RuZhang,M_Price,M_PriceStock) ' +
-            'Values(''%s'',''%s'',''%s'',''%s'',''%s'',%.2f,%s,''%s'',''%s'',''%s'',%.2f,''%s'')';
+            'M_Type,M_Payment,M_Money,M_Date,M_Man,M_Memo,M_RuZhang,M_Price,M_PriceStock,M_AcceptNum,M_PayingUnit,M_PayingMan) ' +
+            'Values(''%s'',''%s'',''%s'',''%s'',''%s'',%.2f,%s,''%s'',''%s'',''%s'',%.2f,''%s'',''%s'',''%s'',''%s'')';
     nStr := Format(nStr, [sTable_InOutMoney, nSaleMan, nCusID, nCusName, nType,
-            nPayment, nVal, FDM.SQLServerNow, gSysParam.FUserID, nMemo,sFlag_No,nPrice,nStockName]);
+            nPayment, nVal, FDM.SQLServerNow, gSysParam.FUserID, nMemo,sFlag_No,nPrice,nStockName,nAcceptNum,nPayingUnit,nPayingMan]);
     FDM.ExecuteSQL(nStr);
 
     if (nLimit > 0) and (
@@ -2764,6 +2775,10 @@ begin
   //添加引号
 
   nStr := ' Select b.*,c.*,d.Z_Name, '+
+          ' Case When ((L_HdOrderId Is Null) or (L_HdOrderId = '''')) Then L_MValue Else ' +
+          ' ( Select sum(isnull(L_MValue,0)) from S_Bill where L_HdOrderId = b.L_HdOrderId) End as L_MValueEx, '+
+          ' Case When ((L_HdOrderId Is Null) or (L_HdOrderId = '''')) Then L_PValue Else ' +
+          ' ( Select sum(isnull(L_PValue,0)) from S_Bill where L_HdOrderId = b.L_HdOrderId) End as L_PValueEx, '+
           ' Case When ((L_HdOrderId Is Null) or (L_HdOrderId = '''')) Then L_Value Else ' +
           ' ( Select sum(isnull(L_Value,0)) from S_Bill where L_HdOrderId = b.L_HdOrderId) End as L_ValueEx '+
           ' From %s b,%s c,%s d Where '+
@@ -2869,9 +2884,138 @@ begin
   end;
 
   if nMul then
-    nStr := 'Select *, (Select L_HYDan from S_Bill where L_ID = P.P_Bill) L_HYDan From %s P Where P_ID In (%s)'
+    nStr := ' Select *, (Select L_HYDan from S_Bill where L_ID = P.P_Bill) L_HYDan, '+
+            ' (P_MValue - isnull(P_KZValue,0)) as P_MValueEx, '+
+            ' (P_MValue-P_PValue-isnull(P_KZValue,0)) As P_NetWeightEx '+
+            ' From %s P Where P_ID In (%s)'
   else
-    nStr := 'Select *, (Select L_HYDan from S_Bill where L_ID = P.P_Bill) L_HYDan From %s P Where P_ID=''%s'' ';
+    nStr := ' Select *, (Select L_HYDan from S_Bill where L_ID = P.P_Bill) L_HYDan, '+
+            ' (P_MValue - isnull(P_KZValue,0)) as P_MValueEx, '+
+            ' (P_MValue-P_PValue-isnull(P_KZValue,0)) As P_NetWeightEx '+
+            ' From %s P Where P_ID=''%s'' ';
+
+  nStr := Format(nStr, [sTable_PoundLog, nPound]);
+
+  if FDM.QueryTemp(nStr).RecordCount < 1 then
+  begin
+    nStr := '称重记录[ %s ] 已无效!!';
+    nStr := Format(nStr, [nPound]);
+    ShowMsg(nStr, sHint); Exit;
+  end;
+
+  nStr := gPath + sReportDir + 'Pound.fr3';
+  if not FDR.LoadReportFile(nStr) then
+  begin
+    nStr := '无法正确加载报表文件';
+    ShowMsg(nStr, sHint); Exit;
+  end;
+
+  nParam.FName := 'UserName';
+  nParam.FValue := gSysParam.FUserID;
+  FDR.AddParamItem(nParam);
+
+  nParam.FName := 'Company';
+  nParam.FValue := gSysParam.FHintText;
+  FDR.AddParamItem(nParam);
+
+  FDR.Dataset1.DataSet := FDM.SqlTemp;
+  FDR.ShowReport;
+  Result := FDR.PrintSuccess;
+
+  if Result  then
+  begin
+    nStr := 'Update %s Set P_PrintNum=P_PrintNum+1 Where P_ID=''%s''';
+    nStr := Format(nStr, [sTable_PoundLog, nPound]);
+    FDM.ExecuteSQL(nStr);
+  end;
+end;
+
+//Date: 2012-4-15
+//Parm: 过磅单号;是否询问;是否批量打印
+//Desc: 打印nPound过磅记录
+function PrintPoundReportKS(const nPound: string; nAsk: Boolean;
+                          const nMul: Boolean = False): Boolean;
+var nStr: string;
+    nParam: TReportParamItem;
+    FNum1,Fnum2,FNum3: Double;
+begin
+  Result := False;
+
+  if nAsk then
+  begin
+    nStr := '是否要打印过磅单?';
+    if not QueryDlg(nStr, sAsk) then Exit;
+  end;
+
+  nStr := 'Select * From %s ';
+  nStr := Format(nStr, [sTable_KSKD]);
+  FDM.QueryTemp(nStr);
+  with FDM.SqlTemp do
+  begin
+    if (RecordCount < 1) then
+    begin
+      FNum1 := 0;
+      FNum2 := 0;
+      FNum3 := 0;
+    end
+    else
+    begin
+      FNum1 := FieldByName('P_Num1').AsFloat;
+      FNum2 := FieldByName('P_Num2').AsFloat;
+      FNum3 := FieldByName('P_Num3').AsFloat;
+    end;
+  end;
+
+  if nMul then
+  begin
+    if FNum1 > 0 then
+    begin
+      nStr := ' Select *, (Select L_HYDan from S_Bill where L_ID = P.P_Bill) L_HYDan, '+
+                ' case When (Select isnull(M_AutoKZ,''N'') from P_Materails where M_ID = P.P_MID) = ''Y'' then ' +
+                ' (case When (P_MValue-P_PValue) >= '+Floattostr(FNum1)+' then P_PValue+'+Floattostr(FNum2)+
+                ' else (P_MValue-'+Floattostr(FNum3)+') end) '+
+                ' else (P_MValue-isnull(P_KZValue,0)) end P_MValueEx,  '+
+                ' case When (Select isnull(M_AutoKZ,''N'') from P_Materails where M_ID = P.P_MID) = ''Y'' then ' +
+                ' (case When (P_MValue-P_PValue) >= '+Floattostr(FNum1)+' then '+Floattostr(FNum2)+
+                ' else (P_MValue-P_PValue-'+Floattostr(FNum3)+') end) '+
+                ' else (P_MValue-P_PValue-isnull(P_KZValue,0)) end P_NetWeightEx, '+
+                ' (Select D_KD from P_OrderDtl where D_ID = P.P_Order) as D_KD '+
+                ' From %s P Where P_ID In (%s)';
+    end
+    else
+    begin
+      nStr := ' Select *, (Select L_HYDan from S_Bill where L_ID = P.P_Bill) L_HYDan, '+
+              ' (P_MValue - isnull(P_KZValue,0)) as P_MValueEx, '+
+              ' (P_MValue-P_PValue-isnull(P_KZValue,0)) As P_NetWeightEx, '+
+              ' (Select D_KD from P_OrderDtl where D_ID = P.P_Order) as D_KD '+
+              ' From %s P Where P_ID In (%s)';
+    end;
+  end
+  else
+  begin
+    if FNum1 > 0 then
+    begin
+      nStr := ' Select *, (Select L_HYDan from S_Bill where L_ID = P.P_Bill) L_HYDan, '+
+                ' case When (Select isnull(M_AutoKZ,''N'') from P_Materails where M_ID = P.P_MID) = ''Y'' then ' +
+                ' (case When (P_MValue-P_PValue) >= '+Floattostr(FNum1)+' then P_PValue+'+Floattostr(FNum2)+
+                ' else (P_MValue-'+Floattostr(FNum3)+') end) '+
+                ' else (P_MValue-isnull(P_KZValue,0)) end P_MValueEx,  '+
+                ' case When (Select isnull(M_AutoKZ,''N'') from P_Materails where M_ID = P.P_MID) = ''Y'' then ' +
+                ' (case When (P_MValue-P_PValue) >= '+Floattostr(FNum1)+' then '+Floattostr(FNum2)+
+                ' else (P_MValue-P_PValue-'+Floattostr(FNum3)+') end) '+
+                ' else (P_MValue-P_PValue-isnull(P_KZValue,0)) end P_NetWeightEx,  '+
+                ' (Select D_KD from P_OrderDtl where D_ID = P.P_Order) as D_KD '+
+                ' From %s P Where P_ID=''%s'' ';
+    end
+    else
+    begin
+      nStr := ' Select *, (Select L_HYDan from S_Bill where L_ID = P.P_Bill) L_HYDan, '+
+              ' (P_MValue - isnull(P_KZValue,0)) as P_MValueEx, '+
+              ' (P_MValue-P_PValue-isnull(P_KZValue,0)) As P_NetWeightEx, '+
+              ' (Select D_KD from P_OrderDtl where D_ID = P.P_Order) as D_KD '+
+              ' From %s P Where P_ID=''%s'' ';
+    end;
+  end;
 
   nStr := Format(nStr, [sTable_PoundLog, nPound]);
 

@@ -152,7 +152,7 @@ begin
 
   if FJBWhere = '' then
   begin
-    Result := Result + 'Where (L_OutFact>=''$S'' and L_OutFact <''$End'')';
+    Result := Result + 'Where (L_MDate>=''$S'' and L_MDate <''$End'') and L_OutFact is not null ';
 
     if nWhere <> '' then
       Result := Result + ' And (' + nWhere + ')';
