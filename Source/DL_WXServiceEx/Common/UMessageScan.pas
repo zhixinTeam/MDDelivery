@@ -675,7 +675,7 @@ begin
   sumNum := 0;
   num1   := 0;
   num2   := 0;
-  nStr   :=' SELECT SUM(Z_QueueMax) as Z_QueueMax FROM %s where Z_StockNo = ''%s'' ';
+  nStr   :=' SELECT SUM(Z_QueueMax) as Z_QueueMax FROM %s where Z_StockNo = ''%s'' and Z_Valid = ''Y'' ';
   nStr   := Format(nStr,[sTable_ZTLines, nStockNo]);
   //查询品种的总队列容量
   WriteLog('队列总容量:'+nStr);
