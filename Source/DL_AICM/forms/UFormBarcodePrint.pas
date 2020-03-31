@@ -103,9 +103,10 @@ var
   nStatus:string;
 begin
   Result := False;
-  nStr := 'select * from %s where WOM_WebOrderID=''%s''';
+  nStr := 'select * from %s where WOM_WebOrderID = ''%s'' ';
   nStr := Format(nStr,[sTable_WebOrderMatch,nwebOrderid]);
 
+  Writelog('SQL:'+nStr);
   with fdm.QueryTemp(nStr) do
   begin
     if RecordCount<1 then
@@ -116,6 +117,7 @@ begin
 
   nStr := 'select L_ID,L_Status,L_HYDan,L_StockName,l_Stockno from %s where L_ID=''%s''';
   nStr := Format(nStr,[sTable_Bill,nBillno]);
+  Writelog('SQL:'+nStr);
   with fdm.QueryTemp(nStr) do
   begin
     if RecordCount<1 then

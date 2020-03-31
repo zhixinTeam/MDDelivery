@@ -258,6 +258,10 @@ begin
   Result := False;
   
   nStr := ' Select *,%s As L_ValidMoney, '+
+          ' Case When ((L_HdOrderId Is Null) or (L_HdOrderId = '''')) Then L_MValue Else ' +
+          ' ( Select sum(isnull(L_MValue,0)) from S_Bill where L_HdOrderId = b.L_HdOrderId) End as L_MValueEx, '+
+          ' Case When ((L_HdOrderId Is Null) or (L_HdOrderId = '''')) Then L_PValue Else ' +
+          ' ( Select sum(isnull(L_PValue,0)) from S_Bill where L_HdOrderId = b.L_HdOrderId) End as L_PValueEx, '+
           ' Case When ((L_HdOrderId Is Null) or (L_HdOrderId = '''')) Then L_Value Else ' +
           ' ( Select sum(isnull(L_Value,0)) from S_Bill where L_HdOrderId = b.L_HdOrderId) End as L_ValueEx '+
           ' From %s b,%s c,%s d Where '+

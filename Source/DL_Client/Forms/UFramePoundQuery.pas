@@ -14,7 +14,7 @@ uses
   cxCheckBox, cxMaskEdit, cxButtonEdit, cxTextEdit, ADODB, cxLabel,
   UBitmapPanel, cxSplitter, cxGridLevel, cxClasses, cxGridCustomView,
   cxGridCustomTableView, cxGridTableView, cxGridDBTableView, cxGrid,
-  ComCtrls, ToolWin;
+  ComCtrls, ToolWin, cxDropDownEdit;
 
 type
   TfFramePoundQuery = class(TfFrameNormal)
@@ -49,6 +49,8 @@ type
     N10: TMenuItem;
     N11: TMenuItem;
     N12: TMenuItem;
+    chkTime: TcxComboBox;
+    dxLayout1Item10: TdxLayoutItem;
     procedure EditDatePropertiesButtonClick(Sender: TObject;
       AButtonIndex: Integer);
     procedure EditTruckPropertiesButtonClick(Sender: TObject;
@@ -64,6 +66,7 @@ type
     procedure N10Click(Sender: TObject);
     procedure N11Click(Sender: TObject);
     procedure N12Click(Sender: TObject);
+    procedure chkTimePropertiesChange(Sender: TObject);
   private
     { Private declarations }
   protected
@@ -149,11 +152,12 @@ begin
 
   if FJBWhere = '' then
   begin
-//    Result := Result + ' Where  ' +
-//              ' (isnull(P_MDate,P_PDate) >=''$S'' and isnull(P_MDate,P_PDate)<''$E'') and (isnull(P_IsKS,''N'') <> ''Y'') ';
-
-    Result := Result + ' Where  ' +
-              ' (P_TwoDate >=''$S'' and P_TwoDate <''$E'') and (isnull(P_IsKS,''N'') <> ''Y'') ';
+    if chkTime.ItemIndex = 0 then
+      Result := Result + ' Where  ' +
+                ' (P_PDate >=''$S'' and P_PDate <''$E'') and (isnull(P_IsKS,''N'') <> ''Y'') '
+    else
+      Result := Result + ' Where  ' +
+                ' (P_TwoDate >=''$S'' and P_TwoDate <''$E'') and (isnull(P_IsKS,''N'') <> ''Y'') ';
   end else
   begin
     Result := Result + ' Where (' + FJBWhere + ') and (isnull(P_IsKS,''N'') <> ''Y'') ';
@@ -576,6 +580,12 @@ begin
   finally
     nList.Free;
   end;
+end;
+
+procedure TfFramePoundQuery.chkTimePropertiesChange(Sender: TObject);
+begin
+  inherited;
+  InitFormData(FWhere);
 end;
 
 initialization

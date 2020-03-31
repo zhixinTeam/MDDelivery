@@ -125,7 +125,7 @@ object fFormNewCard: TfFormNewCard
         Font.Name = 'MS Sans Serif'
         Font.Style = []
         ParentFont = False
-        TabOrder = 12
+        TabOrder = 10
         OnClick = BtnOKClick
       end
       object BtnExit: TButton
@@ -140,7 +140,7 @@ object fFormNewCard: TfFormNewCard
         Font.Name = 'MS Sans Serif'
         Font.Style = []
         ParentFont = False
-        TabOrder = 13
+        TabOrder = 11
         OnClick = BtnExitClick
       end
       object EditValue: TcxTextEdit
@@ -156,7 +156,7 @@ object fFormNewCard: TfFormNewCard
         Style.Font.Name = 'MS Sans Serif'
         Style.Font.Style = []
         Style.IsFontAssigned = True
-        TabOrder = 8
+        TabOrder = 7
         Width = 100
       end
       object EditCus: TcxTextEdit
@@ -291,7 +291,7 @@ object fFormNewCard: TfFormNewCard
         Width = 353
       end
       object EditMemo: TcxTextEdit
-        Left = 642
+        Left = 587
         Top = 230
         ParentFont = False
         Properties.ReadOnly = True
@@ -301,27 +301,14 @@ object fFormNewCard: TfFormNewCard
         Style.Font.Name = 'MS Sans Serif'
         Style.Font.Style = []
         Style.IsFontAssigned = True
-        TabOrder = 10
+        TabOrder = 8
         Width = 160
       end
-      object EditSJPinYin: TcxTextEdit
+      object EditSJName: TcxTextEdit
         Left = 78
         Top = 273
         ParentFont = False
-        Style.Font.Charset = DEFAULT_CHARSET
-        Style.Font.Color = clWindowText
-        Style.Font.Height = -24
-        Style.Font.Name = 'MS Sans Serif'
-        Style.Font.Style = []
-        Style.IsFontAssigned = True
-        TabOrder = 7
-        OnKeyPress = EditSJPinYinKeyPress
-        Width = 300
-      end
-      object EditSJName: TcxTextEdit
-        Left = 440
-        Top = 273
-        ParentFont = False
+        Properties.ReadOnly = True
         Style.BorderColor = clWindowFrame
         Style.BorderStyle = ebs3D
         Style.Font.Charset = DEFAULT_CHARSET
@@ -332,22 +319,6 @@ object fFormNewCard: TfFormNewCard
         Style.IsFontAssigned = True
         TabOrder = 9
         Width = 140
-      end
-      object EditIdent: TcxTextEdit
-        Left = 642
-        Top = 273
-        ParentFont = False
-        Style.BorderColor = clWindowFrame
-        Style.BorderStyle = ebs3D
-        Style.Font.Charset = DEFAULT_CHARSET
-        Style.Font.Color = clWindowText
-        Style.Font.Height = -24
-        Style.Font.Name = 'MS Sans Serif'
-        Style.Font.Style = []
-        Style.IsFontAssigned = True
-        TabOrder = 11
-        OnKeyPress = EditIdentKeyPress
-        Width = 260
       end
       object dxLayoutGroup1: TdxLayoutGroup
         ShowCaption = False
@@ -408,52 +379,32 @@ object fFormNewCard: TfFormNewCard
             object dxGroupLayout1Group6: TdxLayoutGroup
               ShowCaption = False
               Hidden = True
-              LayoutDirection = ldHorizontal
               ShowBorder = False
               object dxLayout1Group3: TdxLayoutGroup
                 ShowCaption = False
                 Hidden = True
+                LayoutDirection = ldHorizontal
                 ShowBorder = False
                 object dxlytmLayout1Item12: TdxLayoutItem
                   Caption = #25552#36135#36710#36742':'
                   Control = EditTruck
                   ControlOptions.ShowBorder = False
                 end
-                object dxLayout1Item31: TdxLayoutItem
-                  Caption = #22995#21517#25340#38899':'
-                  Control = EditSJPinYin
-                  ControlOptions.ShowBorder = False
-                end
-              end
-              object dxLayout1Group5: TdxLayoutGroup
-                ShowCaption = False
-                Hidden = True
-                ShowBorder = False
                 object dxLayout1Item8: TdxLayoutItem
                   Caption = #21150#29702#21544#25968':'
                   Control = EditValue
                   ControlOptions.ShowBorder = False
                 end
-                object dxLayout1Item32: TdxLayoutItem
-                  Caption = #21496#26426#22995#21517':'
-                  Control = EditSJName
-                  ControlOptions.ShowBorder = False
-                end
-              end
-              object dxLayout1Group6: TdxLayoutGroup
-                ShowCaption = False
-                Hidden = True
-                ShowBorder = False
                 object dxLayout1Item1: TdxLayoutItem
                   Caption = #22791#27880#65306
                   Control = EditMemo
                   ControlOptions.ShowBorder = False
                 end
-                object dxLayout1Item33: TdxLayoutItem
-                  Caption = #36523#20221#35777#21495':'
-                  Control = EditIdent
-                  ControlOptions.ShowBorder = False
-                end
+              end
+              object dxLayout1Item32: TdxLayoutItem
+                Caption = #21496#26426#22995#21517':'
+                Control = EditSJName
+                ControlOptions.ShowBorder = False
               end
             end
           end
@@ -518,24 +469,6 @@ object fFormNewCard: TfFormNewCard
       TabOrder = 1
       OnClick = lvOrdersClick
     end
-  end
-  object PrintHY: TcxCheckBox
-    Left = 10
-    Top = 571
-    Caption = #20986#21378#25171#21360#21270#39564#21333
-    ParentFont = False
-    State = cbsChecked
-    Style.BorderColor = clWindowFrame
-    Style.BorderStyle = ebs3D
-    Style.Font.Charset = DEFAULT_CHARSET
-    Style.Font.Color = clWindowText
-    Style.Font.Height = -24
-    Style.Font.Name = 'MS Sans Serif'
-    Style.Font.Style = []
-    Style.IsFontAssigned = True
-    TabOrder = 3
-    Transparent = True
-    Width = 261
   end
   object TimerAutoClose: TTimer
     Enabled = False

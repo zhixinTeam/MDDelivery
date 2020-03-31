@@ -115,6 +115,7 @@ inherited fFormKPPayment: TfFormKPPayment
       Properties.ImmediateDropDown = False
       Properties.IncrementalSearch = False
       Properties.ItemHeight = 18
+      Properties.OnChange = EditNamePropertiesChange
       Properties.OnEditValueChanged = EditNamePropertiesEditValueChanged
       TabOrder = 3
       OnKeyPress = EditNameKeyPress
@@ -212,19 +213,17 @@ inherited fFormKPPayment: TfFormKPPayment
       TabOrder = 17
       Width = 121
     end
-    object EditPayingUnit: TcxTextEdit [21]
-      Left = 87
-      Top = 431
-      ParentFont = False
-      TabOrder = 18
-      OnKeyPress = EditPayingUnitKeyPress
-      Width = 121
-    end
-    object EditPayingMan: TcxTextEdit [22]
+    object EditPayingMan: TcxTextEdit [21]
       Left = 87
       Top = 456
       ParentFont = False
       TabOrder = 19
+      Width = 121
+    end
+    object EditPayingUnit: TcxComboBox [22]
+      Left = 87
+      Top = 431
+      TabOrder = 18
       Width = 121
     end
     inherited dxLayout1Group_Root: TdxLayoutGroup
@@ -351,7 +350,7 @@ inherited fFormKPPayment: TfFormKPPayment
           Control = EditAcceptNum
           ControlOptions.ShowBorder = False
         end
-        object dxLayout1Item22: TdxLayoutItem
+        object dxLayout1Item24: TdxLayoutItem
           Caption = #20132#27454#21333#20301':'
           Control = EditPayingUnit
           ControlOptions.ShowBorder = False

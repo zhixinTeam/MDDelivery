@@ -12,7 +12,7 @@ uses
   UBusinessPacker, UBusinessConst, UMgrDBConn, UMgrParam, UFormCtrl, USysLoger,
   ZnMD5, ULibFun, USysDB, UMITConst, UMgrChannel, DateUtils, IdURI, HTTPApp,
   {$IFDEF WXChannelPool}Wechat_Intf, {$ELSE}WeChat_soap, {$ENDIF}IdHTTP,
-  Graphics, uSuperObject;
+  Graphics, uSuperObject,UObjectList;
 
 const
   cHttpTimeOut          = 10;
@@ -63,7 +63,7 @@ type
     FIn: TWorkerWebChatData;
     FOut: TWorkerWebChatData;
     //in out
-    FIdHttp: TIdHTTP;
+    FChannel: TIdHTTP;
     FUrl: string;
   protected
     procedure ReQuestInit;
@@ -81,8 +81,6 @@ type
     //获取物料名称
     function GetCusName(nCusID: string): string;
     //获取客户名称
-
-
     function GetCustomerValidMoney(nCustomer: string): Double;
     //获取客户可用金
     function GetCustomerValidMoneyFromK3(nCustomer: string): Double;
@@ -121,15 +119,10 @@ type
     //下载图片
     function get_shoporderByTruck(var nData: string): boolean;
     //根据车牌号获取订单信息
-
-
-
     function GetCustomerInfo(var nData: string): Boolean;                       // Dl--->WxService
     //获取客户注册信息
     function edit_shopclients(var nData: string): Boolean;                      // Dl--->WxService
     //绑定商城客户
-    function Get_Shoporders(var nData: string): boolean;                        // Dl--->WxService
-    //获取订单信息
     function Get_ShopordersYY(var nData: string): Boolean;                      // Dl--->WxService
     //获取预约订单信息
     function get_shoporderByNO(var nData: string): boolean;                     // Dl--->WxService
@@ -315,9 +308,6 @@ begin
   FListB := TStringList.Create;
   FListC := TStringList.Create;
 
-  FidHttp := TIdHTTP.Create(nil);
-  FidHttp.ConnectTimeout := cHttpTimeOut * 1000;
-  FidHttp.ReadTimeout := cHttpTimeOut * 1000;
   inherited;
 end;
 
@@ -326,7 +316,6 @@ begin
   FreeAndNil(FListA);
   FreeAndNil(FListB);
   FreeAndNil(FListC);
-  FreeAndNil(FidHttp);
   inherited;
 end;
 
@@ -456,129 +445,171 @@ begin
   end;
 end;
 
-//Date: 2012-3-22
+//Date: 2017-09-24
+//Desc: 创建对象
+function NewHttp(const nClass: TClass): TObject;
+begin
+  Result := TIdHTTP.Create(nil);
+end;
+
+//Date: 2017-09-24
+//Desc: 释放对象
+procedure FreeHttp(const nObject: TObject);
+begin
+  TIdHTTP(nObject).Free;
+end;
+
 //Parm: 输入数据
 //Desc: 执行nData业务指令
 function TBusWorkerBusinessWebchat.DoDBWork(var nData: string): Boolean;
+var
+  nInt: Integer;
+  nItem: PObjectPoolItem;
 begin
-  UnPackIn(nData);
-  with FOut.FBase do
-  begin
-    FResult := True;
-    FErrCode := 'S.00';
-    FErrDesc := '业务执行成功.';
+  nInt := InterlockedExchange(gSapURLInited, 10);
+  try
+    if nInt < 1 then
+    begin
+      if not Assigned(gObjectPoolManager) then
+        gObjectPoolManager := TObjectPoolManager.Create;
+      gObjectPoolManager.RegClass(TIdHTTP, NewHttp, FreeHttp);
+    end;
+  except
+    InterlockedExchange(gSapURLInited, nInt);
   end;
-  FPackOut := False;
 
-  case FIn.FCommand of
-    cBC_WX_VerifPrintCode:
-      Result := VerifyPrintCode(nData);
-    cBC_WX_WaitingForloading:
-      Result := GetWaitingForloading(nData);
-    cBC_WX_BillSurplusTonnage:
-      Result := True;
-    cBC_WX_GetOrderInfo:
-      Result := GetOrderList(nData);
-    cBC_WX_GetOrderList:
-      Result := GetOrderList(nData);
-    cBC_WX_CreatLadingOrder:
-      Result := True;
-    cBC_WX_GetPurchaseContract:
-      Result := GetPurchaseContractList(nData);
-    cBC_WX_getCustomerInfo:
-      begin
-        FPackOut := True;
-        Result := GetCustomerInfo(nData);
-      end;
-//   cBC_WX_get_Bindfunc         : Result := BindCustomer(nData);
-    cBC_WX_send_event_msg:
-      begin
-        FPackOut := True;
-        Result := Send_Event_Msg(nData);
-      end;
-    cBC_WX_edit_shopclients:
-      begin
-        FPackOut := True;
-        Result := Edit_ShopClients(nData);
-      end;
-    cBC_WX_edit_shopgoods:
-      Result := Edit_Shopgoods(nData);
-    cBC_WX_get_shoporders:
-      Result := get_shoporders(nData);
-    cBC_WX_complete_shoporders:
-      begin
-        FPackOut := True;
-        Result := complete_shoporders(nData);
-      end;
-    cBC_WX_get_shoporderbyNO:
-      begin
-        FPackOut := True;
-        Result := get_shoporderByNO(nData);
-      end;
-    cBC_WX_get_shopPurchasebyNO:
-      begin
-        FPackOut := True;
-        Result := get_shoporderByNO(nData);
-      end;
-    cBC_WX_GetCusMoney:
-      Result := GetCusMoney(nData);
-    cBC_WX_GetInOutFactoryTotal:
-      Result := GetInOutFactoryTotal(nData);
-    cBC_WX_GetAuditTruck:
-      begin
-        FPackOut := True;
-        Result := GetShopTruck(nData);
-      end;
-    cBC_WX_UpLoadAuditTruck:
-      begin
-        FPackOut := True;
-        Result   := SyncShopTruckState(nData);
-      end;
-    cBC_WX_DownLoadPic:
-      begin
-        FPackOut := True;
-        Result := DownLoadPic(nData);
-      end;
-    cBC_WX_get_shoporderbyTruck:
-      Result := get_shoporderByTruck(nData);
-    cBC_WX_get_shoporderbyTruckClt:
-      begin
-        FPackOut := True;
+  nItem := nil;
+  try
+    Result := False;
+    nItem := gObjectPoolManager.LockObject(TIdHTTP);
+
+    if not Assigned(nItem) then
+    begin
+      nData := '连接Sap失败(IdHTTP Is Null).';
+      Exit;
+    end;
+
+    FChannel := nItem.FObject as TIdHTTP;
+    
+    UnPackIn(nData);
+    with FOut.FBase do
+    begin
+      FResult := True;
+      FErrCode := 'S.00';
+      FErrDesc := '业务执行成功.';
+    end;
+    FPackOut := False;
+
+    case FIn.FCommand of
+      cBC_WX_VerifPrintCode:
+        Result := VerifyPrintCode(nData);
+      cBC_WX_WaitingForloading:
+        Result := GetWaitingForloading(nData);
+      cBC_WX_BillSurplusTonnage:
+        Result := True;
+      cBC_WX_GetOrderInfo:
+        Result := GetOrderList(nData);
+      cBC_WX_GetOrderList:
+        Result := GetOrderList(nData);
+      cBC_WX_CreatLadingOrder:
+        Result := True;
+      cBC_WX_GetPurchaseContract:
+        Result := GetPurchaseContractList(nData);
+      cBC_WX_getCustomerInfo:
+        begin
+          FPackOut := True;
+          Result := GetCustomerInfo(nData);
+        end;
+  //   cBC_WX_get_Bindfunc         : Result := BindCustomer(nData);
+      cBC_WX_send_event_msg:
+        begin
+          FPackOut := True;
+          Result := Send_Event_Msg(nData);
+        end;
+      cBC_WX_edit_shopclients:
+        begin
+          FPackOut := True;
+          Result := Edit_ShopClients(nData);
+        end;
+      cBC_WX_edit_shopgoods:
+        Result := Edit_Shopgoods(nData);
+      cBC_WX_complete_shoporders:
+        begin
+          FPackOut := True;
+          Result := complete_shoporders(nData);
+        end;
+      cBC_WX_get_shoporderbyNO:
+        begin
+          FPackOut := True;
+          Result := get_shoporderByNO(nData);
+        end;
+      cBC_WX_get_shopPurchasebyNO:
+        begin
+          FPackOut := True;
+          Result := get_shoporderByNO(nData);
+        end;
+      cBC_WX_GetCusMoney:
+        Result := GetCusMoney(nData);
+      cBC_WX_GetInOutFactoryTotal:
+        Result := GetInOutFactoryTotal(nData);
+      cBC_WX_GetAuditTruck:
+        begin
+          FPackOut := True;
+          Result := GetShopTruck(nData);
+        end;
+      cBC_WX_UpLoadAuditTruck:
+        begin
+          FPackOut := True;
+          Result   := SyncShopTruckState(nData);
+        end;
+      cBC_WX_DownLoadPic:
+        begin
+          FPackOut := True;
+          Result := DownLoadPic(nData);
+        end;
+      cBC_WX_get_shoporderbyTruck:
         Result := get_shoporderByTruck(nData);
-      end;
-    cBC_WX_get_shoporderStatus:
+      cBC_WX_get_shoporderbyTruckClt:
+        begin
+          FPackOut := True;
+          Result := get_shoporderByTruck(nData);
+        end;
+      cBC_WX_get_shoporderStatus:
+        begin
+          FPackOut := True;
+          Result := GetshoporderStatus(nData);
+        end;
+      cBC_WX_get_shopYYWebBill:
+        begin
+          FPackOut := True;
+          Result   := Get_ShopordersYY(nData);
+        end;
+      cBC_WX_get_syncYYWebState:
+        begin
+          FPackOut := True;
+          Result   := SyncYYWebState(nData);
+        end;
+      cBC_WX_SaveCustomerWxOrders  :
+        Result := synchronizedYYOrders(nData);
+      cBC_WX_QueryByCar :
+        Result := GetQueryByCar(nData);
+      cBC_WX_IsCanCreateWXOrder  :
+        begin
+          Result := IsCanCreateWXOrder(nData);
+        end;
+      cBC_WX_get_ClientReportInfo:
       begin
-        FPackOut := True;
-        Result := GetshoporderStatus(nData);
+        Result := get_ClientReportInfo(nData);
       end;
-    cBC_WX_get_shopYYWebBill:
+    else
       begin
-        FPackOut := True;
-        Result   := Get_ShopordersYY(nData);
+        Result := False;
+        nData := '无效的业务代码(Code: %d Invalid Command).';
+        nData := Format(nData, [FIn.FCommand]);
       end;
-    cBC_WX_get_syncYYWebState:
-      begin
-        FPackOut := True;
-        Result   := SyncYYWebState(nData);
-      end;
-    cBC_WX_SaveCustomerWxOrders  :
-      Result := synchronizedYYOrders(nData);
-    cBC_WX_QueryByCar :
-      Result := GetQueryByCar(nData);
-    cBC_WX_IsCanCreateWXOrder  :
-      begin
-        Result := IsCanCreateWXOrder(nData);
-      end;
-    cBC_WX_get_ClientReportInfo:
-    begin
-      Result := get_ClientReportInfo(nData);
     end;
-  else
-    begin
-      Result := False;
-      nData := '无效的业务代码(Code: %d Invalid Command).';
-      nData := Format(nData, [FIn.FCommand]);
-    end;
+  finally
+    gObjectPoolManager.ReleaseObject(nItem);
   end;
 end;
 
@@ -671,7 +702,7 @@ begin
     ReQuestInit;
 
     szUrl := gSysParam.FSrvUrl + '/customer/searchShopCustomer';
-    FidHttp.Post(szUrl, wParam, ReStream);
+    FChannel.Post(szUrl, wParam, ReStream);
     nStr := UTF8Decode(ReStream.DataString);
     WriteLog('微信用户列表出参：' + nStr);
     if nStr <> '' then
@@ -708,6 +739,7 @@ begin
     FOut.FData := FListA.Text;
     FOut.FBase.FResult := True;
   finally
+    FChannel.Disconnect;
     ReStream.Free;
     wParam.Free;
   end;
@@ -769,7 +801,7 @@ begin
     ReQuestInit;
 
     szUrl := gSysParam.FSrvUrl + '/customer/relClientIAuth';
-    FidHttp.Post(szUrl, wParam, ReStream);
+    FChannel.Post(szUrl, wParam, ReStream);
     nStr := UTF8Decode(ReStream.DataString);
     if IsBind then
       WriteLog('商城' + FListA.Values['Account'] + ' 账户绑定出参：' + nStr)
@@ -797,6 +829,7 @@ begin
       end;
     end;
   finally
+    FChannel.Disconnect;
     ReStream.Free;
     wParam.Free;
   end;
@@ -1288,7 +1321,7 @@ begin
     ReQuestInit;
 
     szUrl := gSysParam.FSrvUrl + '/order/syncShopOrder';
-    FidHttp.Post(szUrl, wParam, ReStream);
+    FChannel.Post(szUrl, wParam, ReStream);
     nStr := UTF8Decode(ReStream.DataString);
     WriteLog(' 商城订单同步出参：' + nStr);
     if nStr <> '' then
@@ -1304,6 +1337,7 @@ begin
       else WriteLog(' 商城订单同步失败：' + ReJo['msg'].AsString);
     end;
   finally
+    FChannel.Disconnect;
     ReStream.Free;
     wParam.Free;
   end;
@@ -1314,89 +1348,6 @@ begin
   Result := True;
   FOut.FData := sFlag_Yes;
   FOut.FBase.FResult := True;
-end;
-
-function TBusWorkerBusinessWebchat.Get_Shoporders(var nData: string): boolean;
-var
-  nStr, szUrl: string;
-  nIdx: Integer;
-  ReJo, ParamJo, HeaderJo, BodyJo, OneJo: ISuperObject;
-  ArrsJa: TSuperArray;
-  wParam: TStrings;
-  ReStream: TStringStream;
-begin
-  Result := False;
-  wParam := TStringList.Create;
-  ReStream := TStringstream.Create('');
-  ParamJo := SO();
-  HeaderJo := SO();
-  BodyJo := SO();
-  FListA.Text := PackerDecodeStr(FIn.FData);
-
-  try
-    //**********************
-    BodyJo.S['facSerialNo'] := 'zxygc171223111220640999';   //gSysParam.FFactID;
-    BodyJo.S['searchType'] := '1';             //  1 订单号   2 车牌号
-    BodyJo.S['queryWord'] := '1533096003378'; //FListA.Values['ID'];
-
-    ParamJo.S['activeCode']  := Cus_ShopOrder;
-    ParamJo.S['body'] := BodyJo.AsString;
-    nStr := ParamJo.AsString;
-
-    WriteLog('微信用户列表入参：' + nStr);
-
-    wParam.Clear;
-    wParam.Add(nStr);
-    //FidHttp参数初始化
-    ReQuestInit;
-    
-    szUrl := gSysParam.FSrvUrl + '/order/searchShopOrder';
-    FidHttp.Post(szUrl, wParam, ReStream);
-    nStr := UTF8Decode(ReStream.DataString);
-    WriteLog('订单列表查询出参：' + nStr);
-    if nStr <> '' then
-    begin
-      FListA.Clear;
-      FListB.Clear;
-      ReJo := SO(nStr);
-      if ReJo = nil then Exit;
-      
-      if ReJo['code'].AsString = '1' then
-      begin
-        ArrsJa := ParamJo['Data'].AsArray;
-
-        for nIdx := 0 to ArrsJa.Length - 1 do
-        begin
-          OneJo := SO(ArrsJa[nIdx].AsString);
-
-          with FListB do
-          begin
-            Values['order_id']    := OneJo['order_id'].AsString;
-            Values['ordernumber'] := OneJo['ordernumber'].AsString;
-            Values['goodsID']     := OneJo['goodsID'].AsString;
-            Values['goodstype']   := OneJo['goodstype'].AsString;
-            Values['goodsname']   := OneJo['goodsname'].AsString;
-            Values['data']        := OneJo['data'].AsString;
-          end;
-
-          FListA.Add(PackerEncodeStr(FListB.Text));
-        end;
-        nData := PackerEncodeStr(FListA.Text);
-      end
-      else
-      begin
-        WriteLog('订单列表查询失败：' + OneJo['msg'].AsString);
-        Exit;
-      end;
-    end;
-
-    Result := True;
-    FOut.FData := nData;
-    FOut.FBase.FResult := True;
-  finally
-    ReStream.Free;
-    wParam.Free;
-  end;
 end;
 
 function TBusWorkerBusinessWebchat.Get_ShoporderByNO(var nData: string): boolean;
@@ -1416,13 +1367,14 @@ begin
   ReStream := TStringstream.Create('');
   ParamJo := SO();
   BodyJo := SO();
+
   try
     BodyJo.S['searchType'] := '1';             //  1 订单号   2 车牌号
     BodyJo.S['queryWord']  := nWebOrder;
     BodyJo.S['facSerialNo']:= gSysParam.FFactID; //'zxygc171223111220640999';
 
     ParamJo.S['activeCode']  := Cus_ShopOrder;
-    ParamJo.S['body'] := BodyJo.AsString;
+    ParamJo.S['body']        := BodyJo.AsString;
     nStr := ParamJo.AsString;
     //nStr := Ansitoutf8(nStr);
     WriteLog('获取订单信息入参:' + nStr);
@@ -1431,11 +1383,18 @@ begin
     wParam.Add(nStr);
     //FidHttp参数初始化
     ReQuestInit;
-    
-    szUrl := gSysParam.FSrvUrl + '/order/searchShopOrder';
-    FidHttp.Post(szUrl, wParam, ReStream);
-    nStr := UTF8Decode(ReStream.DataString);
-    WriteLog('获取订单信息出参:' + nStr);
+    try
+      szUrl := gSysParam.FSrvUrl + '/order/searchShopOrder';
+      FChannel.Post(szUrl, wParam, ReStream);
+      nStr := UTF8Decode(ReStream.DataString);
+      WriteLog('获取订单信息出参:' + nStr);
+    except
+      on Ex: Exception do
+      begin
+        nData:= '访问获取订单错误: ' + Ex.Message;
+        WriteLog(nData);
+      end;
+    end;
 
     if nStr <> '' then
     begin
@@ -1500,6 +1459,7 @@ begin
       else WriteLog('订单信息失败：' + ReJo.S['msg']);
     end;
   finally
+    FChannel.Disconnect;
     ReStream.Free;
     wParam.Free;
     FListD.Free;
@@ -2432,6 +2392,7 @@ begin
   ReStream := TStringstream.Create('');
   ParamJo := SO();
   BodyJo := SO();
+
   try
     BodyJo.S['searchType'] := '2';             //  1 订单号   2 车牌号
     BodyJo.S['queryWord']  := EncodeBase64(nWebOrder);
@@ -2447,11 +2408,19 @@ begin
     wParam.Add(nStr);
     //FidHttp参数初始化
     ReQuestInit;
-    
-    szUrl := gSysParam.FSrvUrl + '/order/searchShopOrder';
-    FidHttp.Post(szUrl, wParam, ReStream);
-    nStr := UTF8Decode(ReStream.DataString);
-    WriteLog('获取订单信息出参:' + nStr);
+
+    try
+      szUrl := gSysParam.FSrvUrl + '/order/searchShopOrder';
+      FChannel.Post(szUrl, wParam, ReStream);
+      nStr := UTF8Decode(ReStream.DataString);
+      WriteLog('获取订单信息出参:' + nStr);
+    except
+      on Ex: Exception do
+      begin
+        nData:= '访问获取订单错误: ' + Ex.Message;
+        WriteLog(nData);
+      end;
+    end;
 
     if nStr <> '' then
     begin
@@ -2516,6 +2485,7 @@ begin
       else WriteLog('订单信息失败：' + ReJo.S['msg']);
     end;
   finally
+    FChannel.Disconnect;
     ReStream.Free;
     wParam.Free;
     FListD.Free;
@@ -3425,11 +3395,11 @@ end;
 procedure TBusWorkerBusinessWebchat.ReQuestInit;
 begin
   //****************************
-  FidHttp.Request.Clear;
-  FidHttp.Request.Accept         := 'application/json, text/javascript, */*; q=0.01';
-  FidHttp.Request.AcceptLanguage := 'zh-cn,zh;q=0.8,en-us;q=0.5,en;q=0.3';
-  FidHttp.Request.ContentType    := 'application/json;Charset=UTF-8';
-  FidHttp.Request.Connection     := 'keep-alive';
+  FChannel.Request.Clear;
+  FChannel.Request.Accept         := 'application/json, text/javascript, */*; q=0.01';
+  FChannel.Request.AcceptLanguage := 'zh-cn,zh;q=0.8,en-us;q=0.5,en;q=0.3';
+  FChannel.Request.ContentType    := 'application/json;Charset=UTF-8';
+  FChannel.Request.Connection     := 'keep-alive';
 end;
 
 function TBusWorkerBusinessWebchat.GetWebStatus(nCode: string): string;
@@ -3581,7 +3551,7 @@ begin
     ReQuestInit;
     
     szUrl := gSysParam.FSrvUrl + '/truck/searchFacTruck';
-    FidHttp.Post(szUrl, wParam, ReStream);
+    FChannel.Post(szUrl, wParam, ReStream);
     nStr := UTF8Decode(ReStream.DataString);
     WriteLog('获取车辆信息出参:' + nStr);
 
@@ -3624,6 +3594,7 @@ begin
       else WriteLog('获取车辆信息失败：' + ReJo.S['msg']);
     end;
   finally
+    FChannel.Disconnect;
     ReStream.Free;
     wParam.Free;
   end;
@@ -3669,7 +3640,7 @@ begin
     ReQuestInit;
 
     szUrl := gSysParam.FSrvUrl + '/truck/synFacTruck';
-    FidHttp.Post(szUrl, wParam, ReStream);
+    FChannel.Post(szUrl, wParam, ReStream);
     nStr := UTF8Decode(ReStream.DataString);
     WriteLog(' 同步车辆审核状态出参：' + nStr);
     if nStr <> '' then
@@ -3685,6 +3656,7 @@ begin
       else WriteLog(' 同步车辆审核状态失败：' + ReJo['msg'].AsString);
     end;
   finally
+    FChannel.Disconnect;
     ReStream.Free;
     wParam.Free;
   end;
@@ -3758,6 +3730,7 @@ begin
   ReStream := TStringstream.Create('');
   ParamJo := SO();
   BodyJo := SO();
+
   try
     BodyJo.S['searchType'] := '4';             //1订单号 2车牌号 3身份证号查询 4时间查询
     BodyJo.S['queryWord']  := nStart+';'+nEnd;
@@ -3774,10 +3747,18 @@ begin
     //FidHttp参数初始化
     ReQuestInit;
     
-    szUrl := gSysParam.FSrvUrl + '/order/searchShopOrder';
-    FidHttp.Post(szUrl, wParam, ReStream);
-    nStr := UTF8Decode(ReStream.DataString);
-    WriteLog('获取订单信息出参:' + nStr);
+    try
+      szUrl := gSysParam.FSrvUrl + '/order/searchShopOrder';
+      FChannel.Post(szUrl, wParam, ReStream);
+      nStr := UTF8Decode(ReStream.DataString);
+      WriteLog('获取订单信息出参:' + nStr);
+    except
+      on Ex: Exception do
+      begin
+        nData:= '访问获取订单错误: ' + Ex.Message;
+        WriteLog(nData);
+      end;
+    end;
 
     nStr := StringReplace(nStr, '\"', '"', [rfReplaceAll]) ;
     nStr := StringReplace(nStr, '"[', '[', [rfReplaceAll]) ;
@@ -3848,6 +3829,7 @@ begin
       raise;
     end;
   finally
+    FChannel.Disconnect;
     ReStream.Free;
     wParam.Free;
     FListD.Free;
@@ -3898,7 +3880,7 @@ begin
 
     szUrl := gSysParam.FSrvUrl + '/reservationOrder/syncReservationShopOrder';
     try
-      FidHttp.Post(szUrl, wParam, ReStream);
+      FChannel.Post(szUrl, wParam, ReStream);
       nStr := UTF8Decode(ReStream.DataString);
       WriteLog(' 同步微信预约信息出参：' + nStr);
     except
@@ -3920,6 +3902,7 @@ begin
       else WriteLog(' 同步微信预约信息失败：' + ReJo['msg'].AsString);
     end;
   finally
+    FChannel.Disconnect;
     ReStream.Free;
     wParam.Free;
   end;

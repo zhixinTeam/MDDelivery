@@ -70,7 +70,7 @@ type
     //查询卡信息
     procedure QueryPorderinfo(const nCard: string);
     function GetReportFileByStock(const nStock: string): string;
-    function PrintHuaYanReport(const nHID: string;var nBatCode:string; const nAsk: Boolean): Boolean;
+    function PrintHuaYanReport(const nHID: string;var nBatCode:string; const nAsk: Boolean; var nHint: string): Boolean;
     function GetUseFullbat(var nHyDan:string):Boolean;
     function GetNearCode(var nHyDan:string):string;
   end;
@@ -523,7 +523,7 @@ var
   nP: TFormCommandParam;
   nHyDan,nStockname,nstockno:string;
   nShortFileName:string;
-  nStr, nBatCode,nBat:string;
+  nStr, nBatCode,nBat,nMsg:string;
   nIdx:Integer;
 begin
   nShortFileName := '';
@@ -545,12 +545,15 @@ begin
       FDR := TFDR.Create(Application);
     end;
 
-    if PrintHuaYanReport(nP.FParamE,nHyDan, False) then
+    if PrintHuaYanReport(nP.FParamE,nHyDan, False,nMsg) then
     begin
       ShowMsg('打印成功，请在下方出纸口取走您的化验单',sHint);
     end
     else begin
-      ShowMsg('打印失败，请联系开票员补打',sHint);
+      if nMsg <> '' then
+        ShowMsg(nMsg,sHint)
+      else
+        ShowMsg('打印失败，请联系开票员补打',sHint);
     end;
   end;
 end;
@@ -678,10 +681,44 @@ begin
 end;
 
 //Desc: 打印标识为nHID的化验单
-function TfFormMain.PrintHuaYanReport(const nHID: string; var nBatCode:string; const nAsk: Boolean): Boolean;
+function TfFormMain.PrintHuaYanReport(const nHID: string; var nBatCode:string; const nAsk: Boolean; var nHint: string): Boolean;
 var nStr,nSR, nHyDan: string;
   i:integer;
+  nHYCount: Integer;
 begin
+  Result := False;
+  
+  nStr := ' Select D_Value From %s  ' +
+          ' Where D_Name = ''%s'' and D_Memo = ''%s'' ';
+  nStr := Format(nStr, [sTable_SysDict, sFlag_SysParam,sFlag_HYPrintCount]);
+  with FDM.QueryTemp(nStr) do
+  begin
+    if RecordCount > 0 then
+    begin
+      nHYCount := Fields[0].AsInteger;
+    end
+    else
+      nHYCount := 10;
+  end;
+
+  nStr := ' Select sb.L_HyPrintCount From %s sb ' +
+          ' Where sb.L_ID = ''%s''';
+  nStr := Format(nStr, [sTable_Bill, nHID]);
+
+  with FDM.QueryTemp(nStr) do
+  begin
+    if RecordCount > 0 then
+    begin
+      if Fields[0].AsInteger >= nHYCount then
+      begin
+        nStr  := '化验单打印次数已达上限,不能自助打印！';
+        nHint := nStr;
+        ShowMsg(nStr, sHint);
+        Exit;
+      end;
+    end;
+  end;
+  
   if nAsk then
   begin
     Result := True;
@@ -689,28 +726,43 @@ begin
     if not QueryDlg(nStr, sAsk) then Exit;
   end else Result := False;
 
-  nStr := ' Select sr.*, sb.*,C_Name,(case when isnull(sb.L_HYPrintNum,0) > 0 THEN ''补'' ELSE '''' END) AS IsBuDan From $SR sr ' +
-          ' Left Join ($SB) sb on sr.R_SerialNo = sb.L_HYDan and sb.L_ID = ''$ID'' ' +
-          ' Left Join $Cus cus on cus.C_ID=sb.L_CusID ' +
-          ' Where R_SerialNo =''$BatCode'' ';
+  nSR := 'Select * From %s sr ' +
+         ' Left Join %s sp on sp.P_ID=sr.R_PID';
+  nSR := Format(nSR, [sTable_StockRecord, sTable_StockParam]);
+
+  nStr := ' Select hy.*,sr.*,sb.*,C_Name,(case when isnull(sb.L_HyPrintCount,0)>0 THEN ''补'' ELSE '''' END) AS IsBuDan From $HY hy ' +
+          ' Left Join $Cus cus on cus.C_ID=hy.H_Custom' +
+          ' Left Join ($SR) sr on sr.R_SerialNo=H_SerialNo ' +
+          ' Left Join $SB sb on sr.R_SerialNo = sb.L_HYDan and sb.L_ID = ''$ID'' ' +
+          'Where H_Reporter =''$ID''';
   //xxxxx
-  nStr := MacroValue(nStr, [MI('$SR', sTable_StockRecord),MI('$SB', sTable_Bill),
-          MI('$Cus', sTable_Customer), MI('$ID', nHID), MI('$BatCode', nBatCode)]);
-  //xxxxx
-  
+
+  nStr := MacroValue(nStr, [MI('$HY', sTable_StockHuaYan),
+          MI('$Cus', sTable_Customer), MI('$SR', nSR),MI('$SB', sTable_Bill), MI('$ID', nHID)]);
+
   if FDM.QueryTemp(nStr).RecordCount < 1 then
   begin
     nStr := '编号为 %s 的化验单记录已无效!!';
     nStr := Format(nStr, [nHID]);
+    nHint := nStr;
     ShowMsg(nStr, sHint); Exit;
   end;
 
-  nStr := FDM.SqlTemp.FieldByName('L_StockNo').AsString;
+  if Length(Trim(FDM.SqlTemp.FieldByName('R_28Zhe1').AsString)) <= 0 then
+  begin
+    nStr := '编号为 %s 的28天化验单记录不存在!';
+    nStr := Format(nStr, [nHID]);
+    nHint:= nStr;
+    ShowMsg(nStr, sHint); Exit;
+  end;
+
+  nStr := FDM.SqlTemp.FieldByName('L_StockName').AsString;
   nStr := GetReportFileByStock(nStr);
 
   if not FDR.LoadReportFile(nStr) then
   begin
-    nStr := '无法正确加载报表文件';
+    nStr  := '无法正确加载报表文件';
+    nHint := nStr;
     ShowMsg(nStr, sHint); Exit;
   end;
 
@@ -721,7 +773,7 @@ begin
 
   if Result  then
   begin
-    nStr := ' UPDate %s Set L_HYPrintNum = L_HYPrintNum + 1 Where L_ID = ''%s'' ';
+    nStr := ' UPDate %s Set L_HyPrintCount = L_HyPrintCount + 1 Where L_ID = ''%s'' ';
     nStr := Format(nStr, [sTable_Bill, nHID]);
     FDM.ExecuteSQL(nStr);
   end;
@@ -733,7 +785,7 @@ begin
   Result := '';
   nStr := 'Select D_Value From %s Where D_Name=''%s'' and D_Memo=''%s'' ';
   nStr := Format(nStr, [sTable_SysDict, sFlag_HYReportName, nStock]);
-  with FDM.QueryTemp(nStr) do
+  with FDM.QuerySQL(nStr) do
   if RecordCount > 0 then
   begin
     Result := gPath + sReportDir + Fields[0].AsString;

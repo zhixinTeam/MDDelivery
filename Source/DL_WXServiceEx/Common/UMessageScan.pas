@@ -150,7 +150,7 @@ begin
   FXMLBuilder :=TNativeXml.Create;
 
   FWaiter := TWaitObject.Create;
-  FWaiter.Interval := 30*1000;
+  FWaiter.Interval := 60*1000;
 
   FSyncLock := TCrossProcWaitObject.Create('WXService_MessageScan');
   //process sync
@@ -262,13 +262,6 @@ begin
             nStr := PackerEncodeStr(FListA.Text);
             nResult := TBusWorkerBusinessWebchat.CallMe(cBC_WX_complete_shoporders
                        ,nStr,'',@nOut);
-//            if nResult then
-//            begin
-//              if FListA.Values['WOM_BillType'] = sFlag_Sale then
-//                nResult := SendSaleMsgToWebMall(FListA)
-//              else
-//                nResult := SendOrderMsgToWebMall(FListA);
-//            end;
 
             if nResult then
             begin

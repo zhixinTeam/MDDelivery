@@ -58,18 +58,11 @@ type
     btnClear: TcxButton;
     TimerAutoClose: TTimer;
     dxLayout1Group2: TdxLayoutGroup;
-    PrintHY: TcxCheckBox;
     EditMemo: TcxTextEdit;
     dxLayout1Item1: TdxLayoutItem;
-    dxLayout1Item31: TdxLayoutItem;
-    EditSJPinYin: TcxTextEdit;
-    dxLayout1Group3: TdxLayoutGroup;
     dxLayout1Item32: TdxLayoutItem;
     EditSJName: TcxTextEdit;
-    dxLayout1Group5: TdxLayoutGroup;
-    dxLayout1Item33: TdxLayoutItem;
-    EditIdent: TcxTextEdit;
-    dxLayout1Group6: TdxLayoutGroup;
+    dxLayout1Group3: TdxLayoutGroup;
     procedure BtnExitClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormShow(Sender: TObject);
@@ -80,8 +73,6 @@ type
     procedure lvOrdersClick(Sender: TObject);
     procedure editWebOrderNoKeyPress(Sender: TObject; var Key: Char);
     procedure btnClearClick(Sender: TObject);
-    procedure EditSJPinYinKeyPress(Sender: TObject; var Key: Char);
-    procedure EditIdentKeyPress(Sender: TObject; var Key: Char);
   private
     { Private declarations }
     FAutoClose:Integer; //窗口自动关闭倒计时（分钟）
@@ -102,12 +93,6 @@ type
     function SaveBillProxyPD: Boolean;
     function SaveWebOrderMatch(const nBillID,nWebOrderID,nBillType:string):Boolean;
     function CheckYYOrderState(const nWebOrderID:string; var nHint: string):Boolean;
-    procedure GetSJInfo;
-    //获取司机信息
-    procedure GetSJInfoEx;
-    //获取司机信息
-    procedure GetSJName;
-    //获取司机名称
     procedure SyncCard(const nCard: TIdCardInfoStr;const nReader: TSDTReaderItem);
   public
     { Public declarations }
@@ -168,29 +153,9 @@ begin
   TimerAutoClose.Enabled := True;
   EditPrice.Properties.Buttons[0].Visible := False;
   dxLayout1Item11.Visible := False;
-  {$IFDEF PrintHYEach}
-  PrintHY.Checked := True;
-  PrintHY.Enabled := False;
-  {$ELSE}
-  PrintHY.Checked := False;
-  PrintHY.Enabled := True;
-  {$ENDIF}
 
-  {$IFDEF IdentCard}
-  dxLayout1Item31.Visible := True;
-  EditIdent.Text := '';
   dxLayout1Item32.Visible := True;
-  EditSJPinYin.Text := '';
-  dxLayout1Item33.Visible := True;
   EditSJName.Text := '';
-  {$ELSE}
-  dxLayout1Item31.Visible := False;
-  EditIdent.Text := '';
-  dxLayout1Item32.Visible := False;
-  EditSJPinYin.Text := '';
-  dxLayout1Item33.Visible := False;
-  EditSJName.Text := '';
-  {$ENDIF}
 end;
 
 procedure TfFormNewCard.SetControlsReadOnly;
@@ -485,12 +450,10 @@ begin
     EditSName.Text  := nOrderItem.FGoodsname;
     EditValue.Text  := nOrderItem.FData;
     EditTruck.Text  := nOrderItem.Ftracknumber;
-    {$IFDEF IdentCard}
-    GetSJInfoEx;
-    {$ENDIF}
     EditCus.Text    := nOrderItem.FCusID;
     EditCName.Text  := nOrderItem.FCusName;
     EditMemo.Text   := nOrderItem.FXHSpot;
+    EditSJName.Text := nOrderItem.FdrvName;
   {$ELSE}
     //填充界面信息
     //基本信息
@@ -755,10 +718,8 @@ begin
     nTmp.Values['StockName'] := EditSName.Text;
     nTmp.Values['Price'] := EditPrice.Text;
     nTmp.Values['Value'] := EditValue.Text;
+    nTmp.Values['PrintHY'] := sFlag_Yes;
 
-    if PrintHY.Checked  then
-         nTmp.Values['PrintHY'] := sFlag_Yes
-    else nTmp.Values['PrintHY'] := sFlag_No;
 
     nList.Add(PackerEncodeStr(nTmp.Text));
     nPrint := nStocks.IndexOf(EditStock.Text) >= 0;
@@ -777,10 +738,7 @@ begin
       {$IFDEF UseXHSpot}
       Values['L_XHSpot'] := EditMemo.Text;
       {$ENDIF}
-      {$IFDEF IdentCard}
-      Values['Ident'] := EditIdent.Text;
-      Values['SJName']:= EditSJName.Text;
-      {$ENDIF}
+      Values['SJName']   := EditSJName.Text;
     end;
     nBillData := PackerEncodeStr(nList.Text);
     FBegin := Now;
@@ -978,9 +936,7 @@ begin
       nTmp.Values['Price'] := FPrice;
       nTmp.Values['Value'] := FData;
 
-      if PrintHY.Checked  then
-           nTmp.Values['PrintHY'] := sFlag_Yes
-      else nTmp.Values['PrintHY'] := sFlag_No;
+      nTmp.Values['PrintHY'] := sFlag_Yes;
 
       nList.Add(PackerEncodeStr(nTmp.Text));
       nPrint := nStocks.IndexOf(FGoodsID) >= 0;
@@ -1132,44 +1088,6 @@ begin
   ActiveControl := editWebOrderNo;
 end;
 
-procedure TfFormNewCard.EditSJPinYinKeyPress(Sender: TObject; var Key: Char);
-begin
-  if Key = #13 then
-  begin
-    Key := #0;
-    GetSJInfo;
-  end;
-end;
-
-procedure TfFormNewCard.GetSJInfo;
-var
-  nStr : string;
-begin
-  nStr := 'Select D_Name, D_IDCard From %s Where (D_PinYin like ''%%%s%%'') or (D_PY like ''%%%s%%'') ';
-  nStr := Format(nStr, [sTable_DriverWh, Trim(EditSJPinYin.Text) , Trim(EditSJPinYin.Text)]);
-  with FDM.QueryTemp(nStr) do
-  if Recordcount = 1 then
-  begin
-    EditSJName.Text := Fields[0].AsString;
-    EditIdent.Text  := Fields[1].AsString;
-  end;
-end;
-
-procedure TfFormNewCard.GetSJInfoEx;
-var
-  nStr : string;
-begin
-  nStr := 'Select D_Name, D_IDCard From %s Where (D_Truck like ''%%%s%%'') ';
-  nStr := Format(nStr, [sTable_DriverWh, Trim(EditTruck.Text)]);
-  with FDM.QueryTemp(nStr) do
-  if Recordcount = 1 then
-  begin
-    EditSJName.Text := Fields[0].AsString;
-    EditIdent.Text  := Fields[1].AsString;
-  end;
-end;
-
-
 procedure TfFormNewCard.SyncCard(const nCard: TIdCardInfoStr;
   const nReader: TSDTReaderItem);
 var nStr: string;
@@ -1178,31 +1096,8 @@ begin
   nStr := Format(nStr, [nReader.FID, nCard.FName, nCard.FIdSN]);
   WriteLog(nStr);
 
-  EditIdent.Text := nCard.FIdSN;
-  GetSJName;
-end;
-
-procedure TfFormNewCard.GetSJName;
-var
-  nStr : string;
-begin
-  nStr := 'Select D_Name, D_PinYin From %s Where D_IDCard = ''%s'' ';
-  nStr := Format(nStr, [sTable_DriverWh, Trim(EditIdent.Text)]);
-  with FDM.QueryTemp(nStr) do
-  if Recordcount > 0 then
-  begin
-    EditSJName.Text    := Fields[0].AsString;
-    EditSJPinYin.Text  := Fields[1].AsString;
-  end;
-end;
-
-procedure TfFormNewCard.EditIdentKeyPress(Sender: TObject; var Key: Char);
-begin
-  if Key = #13 then
-  begin
-    Key := #0;
-    GetSJName;
-  end;
+  //EditIdent.Text := nCard.FIdSN;
+  //
 end;
 
 function TfFormNewCard.CheckYYOrderState(const nWebOrderID: string;

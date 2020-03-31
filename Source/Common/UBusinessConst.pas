@@ -162,6 +162,7 @@ const
   cBC_WX_get_syncYYWebState   = $0527;   //微信：推送预约订单信息状态
   cBC_WX_SaveCustomerWxOrders = $0529;   //微信：新增客户预开单
   cBC_WX_QueryByCar           = $0534;   //微信：查询车辆状态
+  cBC_WX_get_ClientReportInfo = $0535;   //微信：查询客户报表信息
   cBC_WX_IsCanCreateWXOrder   = $0531;   //微信：下单校验
 type
   PWorkerQueryFieldData = ^TWorkerQueryFieldData;
@@ -229,6 +230,7 @@ type
     FNewOrder   : string;          //新申请单
     FSerialNo   : string;          //记录编号
     FKD         : string;          //卸货地点
+    FSJName     : string;          //司机姓名
   end;
 
   TLadingBillItems = array of TLadingBillItem;
@@ -247,6 +249,9 @@ procedure AnalyseBillItems(const nData: string; var nItems: TLadingBillItems);
 //解析由业务对象返回的交货单数据
 function CombineBillItmes(const nItems: TLadingBillItems): string;
 //合并交货单数据为业务对象能处理的字符串
+
+var
+  gSapURLInited: Integer = 0;      //是否初始化
 
 resourcestring
   {*PBWDataBase.FParam*}
@@ -380,6 +385,7 @@ begin
         FSerialNo:= Values['SerialNo'];
         FLadeTime:= Values['LadeTime'];
         FCusType := Values['CusType'];
+        FSJName  := Values['SJName'];
         FUPlace  := Values['UPlace'];
         FSPlace  := Values['SPlace'];
         FNewOrder:= Values['NewOrder'];
@@ -465,6 +471,7 @@ begin
         Values['Memo']       := FMemo;
         Values['HKRecord']   := FHKRecord;
         Values['SerialNo']   := FSerialNo;
+        Values['SJName']     := FSJName;
 
         if FPrintHY then
              Values['PrintHY'] := sFlag_Yes

@@ -626,6 +626,7 @@ begin
     nList.Values['Value'] := EditValue.Text;
 
     nList.Values['WebOrderID'] := nWebOrderID;
+    nList.Values['SJName']     := nOrderItem.FdrvName;
 
     nList.Values['KFValue']  := Trim(EditValue.Text);
     nList.Values['KFLS']     := Trim(EditLs.Text);

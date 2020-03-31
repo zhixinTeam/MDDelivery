@@ -57,10 +57,10 @@ type
     dxLayout1Item20: TdxLayoutItem;
     EditAcceptNum: TcxTextEdit;
     dxLayout1Item21: TdxLayoutItem;
-    EditPayingUnit: TcxTextEdit;
-    dxLayout1Item22: TdxLayoutItem;
     EditPayingMan: TcxTextEdit;
     dxLayout1Item23: TdxLayoutItem;
+    EditPayingUnit: TcxComboBox;
+    dxLayout1Item24: TdxLayoutItem;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure EditSalesManPropertiesChange(Sender: TObject);
@@ -71,6 +71,7 @@ type
     procedure BtnOKClick(Sender: TObject);
     procedure EditMoneyExit(Sender: TObject);
     procedure EditPayingUnitKeyPress(Sender: TObject; var Key: Char);
+    procedure EditNamePropertiesChange(Sender: TObject);
   protected
     { Private declarations }
     function OnVerifyCtrl(Sender: TObject; var nHint: string): Boolean; override;
@@ -393,14 +394,15 @@ begin
   end;
 
   //保存交货单位信息
-  nStr := 'Select Count(*) From %s Where P_PayingUnit=''%s''';
-  nStr := Format(nStr, [sTable_PayingUnit, Trim(EditPayingUnit.Text)]);
-  
+  nStr := ' Select Count(*) From %s Where P_PayingUnit=''%s'' and P_CustID = ''%s'' ';
+  nStr := Format(nStr, [sTable_PayingUnit, Trim(EditPayingUnit.Text),gInfo.FCusID]);
+
   with FDM.QueryTemp(nStr) do
   if Fields[0].AsInteger < 1 then
   begin
-    nStr := 'Insert Into %s(P_PayingUnit, P_PY) Values(''%s'', ''%s'')';
-    nStr := Format(nStr, [sTable_PayingUnit, Trim(EditPayingUnit.Text), GetPinYinOfStr(Trim(EditPayingUnit.Text))]);
+    nStr := 'Insert Into %s(P_PayingUnit, P_PY, P_CustID,P_SaleID) Values(''%s'',''%s'',''%s'',''%s'')';
+    nStr := Format(nStr, [sTable_PayingUnit, Trim(EditPayingUnit.Text),
+      GetPinYinOfStr(Trim(EditPayingUnit.Text)),gInfo.FCusID,GetCtrlData(EditSalesMan)]);
     FDM.ExecuteSQL(nStr);
   end;
 
@@ -538,6 +540,34 @@ begin
     if (nP.FCommand = cCmd_ModalResult) and(nP.FParamA = mrOk) then
       EditPayingUnit.Text := nP.FParamB;
     EditPayingUnit.SelectAll;
+  end;
+end;
+
+procedure TfFormPayment.EditNamePropertiesChange(Sender: TObject);
+var nStr: string;
+begin
+  if EditName.ItemIndex > -1 then
+  begin
+    EditPayingUnit.Properties.Items.Clear;
+    EditPayingUnit.Clear;
+    
+    nStr := ' Select distinct P_PayingUnit From %s Where P_CustID = ''%s'' ';
+    nStr := Format(nStr, [sTable_PayingUnit, GetCtrlData(EditName)]);
+
+    with FDM.QueryTemp(nStr) do
+    if RecordCount > 0 then
+    begin
+      First;
+      while not Eof do
+      begin
+        EditPayingUnit.Properties.Items.Add(FieldByName('P_PayingUnit').AsString);
+        Next;
+      end;
+    end;
+    if EditPayingUnit.Properties.Items.Count = 1 then
+    begin
+      EditPayingUnit.ItemIndex := 0;
+    end;
   end;
 end;
 

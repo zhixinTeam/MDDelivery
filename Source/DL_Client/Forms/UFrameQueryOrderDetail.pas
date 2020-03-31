@@ -94,7 +94,7 @@ begin
 
   FJBWhere := '';
   InitDateRange(Name, FStart, FEnd);
-  N7.Visible := False;
+  N7.Visible := True;
   N8.Visible := False;
   {$IFDEF SendUnLoadPlace}
   if gSysParam.FIsAdmin then
@@ -274,28 +274,32 @@ begin
 end;
 
 procedure TfFrameOrderDetailQuery.N7Click(Sender: TObject);
-var nStr,nID,nPlace: string;
+var nStr,nID,nTruck: string;
 begin
   if cxView1.DataController.GetSelectedCount > 0 then
   begin
-    nStr := SQLQuery.FieldByName('D_SPlace').AsString;
-    nPlace := nStr;
-    if not ShowInputBox('请输入新的发货地点:', '修改', nPlace, 100) then Exit;
+    nStr := SQLQuery.FieldByName('D_Truck').AsString;
+    nTruck := nStr;
+    if not ShowInputBox('请输入新的车牌号:', '修改', nTruck, 100) then Exit;
 
-    if (nPlace = '') or (nStr = nPlace) then Exit;
+    if (nTruck = '') or (nStr = nTruck) then Exit;
     //无效或一致
     nID := SQLQuery.FieldByName('D_ID').AsString;
 
-    nStr := 'Update %s Set D_SPlace=''%s'' Where D_ID=''%s''';
-    nStr := Format(nStr, [sTable_OrderDtl, nPlace, nID]);
+    nStr := 'Update %s Set D_Truck=''%s'' Where D_ID=''%s''';
+    nStr := Format(nStr, [sTable_OrderDtl, nTruck, nID]);
     FDM.ExecuteSQL(nStr);
 
-    nStr := '采购单[ %s ]修改发货地点[ %s -> %s ].';
-    nStr := Format(nStr, [nID, SQLQuery.FieldByName('D_SPlace').AsString, nPlace]);
+    nStr := 'Update %s Set P_Truck=''%s'' Where P_Order=''%s''';
+    nStr := Format(nStr, [sTable_PoundLog, nTruck, nID]);
+    FDM.ExecuteSQL(nStr);
+
+    nStr := '采购单[ %s ]修改车牌号[ %s -> %s ].';
+    nStr := Format(nStr, [nID, SQLQuery.FieldByName('D_Truck').AsString, nTruck]);
     FDM.WriteSysLog(sFlag_BillItem, nID, nStr, False);
 
     InitFormData(FWhere);
-    ShowMsg('发货地点修改成功', sHint);
+    ShowMsg('车牌号修改成功', sHint);
   end;
 end;
 

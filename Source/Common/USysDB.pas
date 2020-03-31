@@ -212,6 +212,7 @@ const
   sFlag_PEmpTWuCha    = 'EmpTruckWuCha';             //空车出厂误差
 
   sFlag_JsWc          = 'PoundJSWc';                 //采购拒收误差
+  sFlag_HYPrintCount  = 'HYPrintMaxCount';           //化验单最大打印次数
 
   sFlag_CommonItem    = 'CommonItem';                //公共信息
   sFlag_CardItem      = 'CardItem';                  //磁卡信息项
@@ -368,6 +369,8 @@ const
   sTable_ZTTrucks     = 'S_ZTTrucks';                //车辆队列
   sTable_AuditTruck   = 'S_AuditTruck';              //车辆审核
 
+  sTable_PayingUnit   = 'S_PayingUnit';              //交货单位
+
   sTable_ZTCard       = 'S_ZTCard';                  //当前刷卡信息表
   sTable_YCLquality   = 'YCLquality_data';           //原材料检验表
 
@@ -400,6 +403,7 @@ const
   sTable_WebOrderMatch   = 'S_WebOrderMatch';        //商城订单映射
 
   sTable_PoundLog     = 'Sys_PoundLog';              //过磅数据
+  sTable_KSKD         = 'P_KSKD';                    //矿山扣吨表
   sTable_PoundBak     = 'Sys_PoundBak';              //过磅作废
   sTable_Picture      = 'Sys_Picture';               //存放图片
   sTable_PoundDaiWC   = 'Sys_PoundDaiWuCha';         //包装误差
@@ -1123,6 +1127,9 @@ const
    T_PValue = (T_PValue * T_PTime + 新皮重) / (T_PTime + 1)
   -----------------------------------------------------------------------------}
 
+  sSQL_NewPayingUnit = 'Create Table $Table(R_ID $Inc, P_PayingUnit varChar(60), ' +
+     'P_PY varChar(30), P_CustID varChar(30), P_SaleID varchar(30))';
+
 
   sSQL_NewYCLQuality_data = 'Create Table $Table(R_ID $Inc, assay_time varChar(50), ' +
        'assay_value_group varChar(30), equipment_id varChar(32), equipment_name varChar(50),laboratory_types varChar(50), ' +
@@ -1179,6 +1186,16 @@ const
    *.P_Mate: 物料
    *.P_Date: 时间
    *.P_Picture: 图片
+  -----------------------------------------------------------------------------}
+
+  sSQL_NewKSKD = ' Create Table $Table(R_ID $Inc, P_Num1 $Float,' +
+       ' P_Num2 $Float, P_Num3 $Float)';
+  {-----------------------------------------------------------------------------
+   矿山扣吨: P_KSKD
+   *.R_ID: 编号
+   *.P_Num1: 超过净重数
+   *.P_Num2: 超过净重数默认值
+   *.P_Num3: 扣吨数
   -----------------------------------------------------------------------------}
 
   sSQL_NewPoundDaiWC = 'Create Table $Table(R_ID $Inc,' +
@@ -2131,6 +2148,7 @@ begin
   AddSysTableItem(sTable_BillHK, sSQL_NewBillHK);
 
   AddSysTableItem(sTable_Truck, sSQL_NewTruck);
+  AddSysTableItem(sTable_PayingUnit, sSQL_NewPayingUnit);
   AddSysTableItem(sTable_YCLquality, sSQL_NewYCLQuality_data);
   AddSysTableItem(sTable_ZTLines, sSQL_NewZTLines);
   AddSysTableItem(sTable_ZTTrucks, sSQL_NewZTTrucks);
@@ -2140,6 +2158,8 @@ begin
   AddSysTableItem(sTable_PoundDaiWC, sSQL_NewPoundDaiWC);
   AddSysTableItem(sTable_Provider, ssql_NewProvider);
   AddSysTableItem(sTable_Materails, sSQL_NewMaterails);
+
+  AddSysTableItem(sTable_KSKD, sSQL_NewKSKD);
 
   AddSysTableItem(sTable_StockParam, sSQL_NewStockParam);
   AddSysTableItem(sTable_YCLParam,   sSQL_NewYCLParam);
