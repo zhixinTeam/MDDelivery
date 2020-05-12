@@ -730,12 +730,16 @@ begin
          ' Left Join %s sp on sp.P_ID=sr.R_PID';
   nSR := Format(nSR, [sTable_StockRecord, sTable_StockParam]);
 
-  nStr := ' Select hy.*,sr.*,sb.*,C_Name,(case when isnull(sb.L_HyPrintCount,0)>0 THEN ''ฒน'' ELSE '''' END) AS IsBuDan From $HY hy ' +
-          ' Left Join $Cus cus on cus.C_ID=hy.H_Custom' +
+  nStr := ' Select H_ID,H_No,H_Custom,H_CusName,H_SerialNo,H_Truck,H_BillDate, ' +
+          ' H_EachTruck,H_ReportDate,H_Reporter, ' +
+          ' CASE WHEN ((L_HDORDERID IS NULL) OR (L_HDORDERID = '''')) THEN L_VALUE ELSE ' +
+          ' (SELECT SUM(ISNULL(L_VALUE,0)) FROM S_BILL WHERE L_HDORDERID = sb.L_HDORDERID) END AS H_Value, ' +
+          ' sr.*,sb.*, C_Name, (H_BillDate-4) as H_QYDate,'+
+          ' (case when isnull(sb.L_HyPrintCount,0)>0 THEN ''ฒน'' ELSE '''' END) AS IsBuDan From $HY hy ' +
+          ' inner join $SB sb on hy.H_Reporter = sb.L_ID '+
+          ' Left Join $Cus cus on cus.C_ID=hy.H_Custom ' +
           ' Left Join ($SR) sr on sr.R_SerialNo=H_SerialNo ' +
-          ' Left Join $SB sb on sr.R_SerialNo = sb.L_HYDan and sb.L_ID = ''$ID'' ' +
-          'Where H_Reporter =''$ID''';
-  //xxxxx
+          ' Where H_Reporter=''$ID''';
 
   nStr := MacroValue(nStr, [MI('$HY', sTable_StockHuaYan),
           MI('$Cus', sTable_Customer), MI('$SR', nSR),MI('$SB', sTable_Bill), MI('$ID', nHID)]);

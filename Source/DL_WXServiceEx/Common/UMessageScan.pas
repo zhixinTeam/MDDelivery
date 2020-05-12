@@ -53,6 +53,7 @@ type
     //销售出厂消息
     function SaveOrderOutFactMsg(nList: TStrings):Boolean;
     //销售出厂消息
+    procedure CheckZhiKaXTMoney;
     procedure Execute; override;
     //执行线程
   public
@@ -150,7 +151,7 @@ begin
   FXMLBuilder :=TNativeXml.Create;
 
   FWaiter := TWaitObject.Create;
-  FWaiter.Interval := 60*1000;
+  FWaiter.Interval := 30*1000;  
 
   FSyncLock := TCrossProcWaitObject.Create('WXService_MessageScan');
   //process sync
@@ -199,7 +200,7 @@ begin
 
     Inc(FNumOutFactMsg);
 
-    if FNumOutFactMsg >= 3 then
+    if FNumOutFactMsg >= 4 then
       FNumOutFactMsg := 0;
 
     //--------------------------------------------------------------------------
@@ -232,6 +233,10 @@ begin
         {$IFDEF UseWebYYOrder}
         DoYYOverTime;
         {$ENDIF}
+      end
+      else if FNumOutFactMsg = 3 then
+      begin
+        CheckZhiKaXTMoney;
       end;
 
       nStr := ' select top 100 * from %s where WOM_SyncNum <= %d And WOM_deleted <> ''%s'' ';
@@ -604,7 +609,7 @@ var nStr: string;
     nOut: TWorkerWebChatData;
 begin
   nStr := ' select top 100 * from %s where W_State = ''%s'' and W_SyncNum <= %d '+
-          ' and W_deleted <> ''%s'' Order by W_MakeTime asc ';
+          ' and W_deleted <> ''%s'' and  W_StockNo in (select distinct D_ParamB from Sys_Dict where D_Name=''StockItem'' ) Order by W_MakeTime asc ';
   nStr := Format(nStr,[sTable_YYWebBill, '0', gMessageScan.FSyncTime, sFlag_Yes]);
   //查询最早100条网上预约单记录
   with gDBConnManager.WorkerQuery(FDBConn, nStr) do
@@ -783,6 +788,11 @@ begin
           nStr := Format(nStr,[sTable_YYWebBill, FListC[nIdx]]);
           gDBConnManager.ExecSQL(nStr);
           //更新预约超时单据
+
+          nStr := ' update %s set W_State = ''2'' where W_StockNo not in (select distinct D_ParamB from Sys_Dict where D_Name=''StockItem'' )';
+          nStr := Format(nStr,[sTable_YYWebBill]);
+          gDBConnManager.ExecSQL(nStr);
+          //更新原材料单据
         finally
           gDBConnManager.ReleaseConnection(nUpdateDBWorker);
         end;
@@ -881,6 +891,55 @@ begin
     if FDBConn.FConn.InTransaction then
       FDBConn.FConn.RollbackTrans;
     raise;
+  end;
+end;
+
+procedure TMessageScanThread.CheckZhiKaXTMoney;
+var
+  nStr: string;
+  nUpdateDBWorker: PDBWorker;
+begin
+  nUpdateDBWorker := nil;
+
+  try
+    //校正纸卡付款方式
+    nStr := ' update S_ZhiKa set Z_PayType = (select D_Index from Sys_Dict ' +
+            ' where D_Name= ''PaymentItem'' and D_Value=Z_Payment)';
+    gDBConnManager.ExecSQL(nStr);
+    //校正出入金付款方式
+    nStr := ' update Sys_CustomerInOutMoney set M_PayType = '+
+            ' (select D_Index from Sys_Dict where D_Name= ''PaymentItem2'' and D_Value=M_Payment)';
+    gDBConnManager.ExecSQL(nStr);
+
+    //初始化
+    nStr := ' update S_ZhiKa set Z_FixedMoney = 0';
+    gDBConnManager.ExecSQL(nStr);
+
+    //校正纸卡限提1
+    nStr := ' update S_ZhiKa set Z_FixedMoney  = M_Money From( ' +
+            ' Select Sum(isnull(M_Money,0)) M_Money, M_CusID,M_PayType from ( ' +
+            ' select M_Money, M_CusID,M_PayType from Sys_CustomerInOutMoney ' +
+            '  ) t Group by M_CusID,M_PayType) b where Z_Customer = b.M_CusID and Z_PayType= M_PayType ';
+    gDBConnManager.ExecSQL(nStr);
+    //校正纸卡限提2
+    nStr := ' update S_ZhiKa set Z_FixedMoney  = Z_FixedMoney-L_Money From( ' +
+            ' Select isnull(Sum(L_Money),0) L_Money, L_CusID,L_ZhiKa from ( ' +
+            ' select isnull(L_Value,0) * isnull(L_Price,0) as L_Money, L_CusID,L_ZhiKa from S_Bill ' +
+            '  ) t Group by L_CusID,L_ZhiKa) b where Z_Customer = b.L_CusID and Z_ID= b.L_ZhiKa ';
+    gDBConnManager.ExecSQL(nStr);
+    //校正纸卡限提标识1
+    nStr := ' update S_ZhiKa set Z_OnlyMoney= ''Y'' where Z_Customer ' +
+            ' not in (select A_CID from Sys_CustomerAccount ' +
+            ' where A_CreditLimit >0 Group by A_CID ) ';
+    gDBConnManager.ExecSQL(nStr);
+    //校正纸卡限提标识2
+    nStr := ' update S_ZhiKa set Z_OnlyMoney= NULL where Z_Customer ' +
+            ' in (select A_CID from Sys_CustomerAccount ' +
+            ' where A_CreditLimit >0 Group by A_CID ) ';
+    gDBConnManager.ExecSQL(nStr);
+
+  finally
+    gDBConnManager.ReleaseConnection(nUpdateDBWorker);
   end;
 end;
 

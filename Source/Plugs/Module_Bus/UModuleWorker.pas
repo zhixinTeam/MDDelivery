@@ -1203,16 +1203,16 @@ begin
     gDBConnManager.WorkerExec(FDBConn, nStr);
     //freeze money from account
 
-    if nFixMoney = sFlag_Yes then
-    begin
-      nStr := 'Update %s Set Z_FixedMoney=Z_FixedMoney-%s Where Z_ID=''%s''';
-      nStr := Format(nStr, [sTable_ZhiKa, FloatToStr(nVal),
-              FListA.Values['CusID']]);
-      //xxxxx
-
-      gDBConnManager.WorkerExec(FDBConn, nStr);
-      //freeze money from zhika
-    end;
+//    if nFixMoney = sFlag_Yes then
+//    begin
+//      nStr := 'Update %s Set Z_FixedMoney=Z_FixedMoney-%s Where Z_ID=''%s''';
+//      nStr := Format(nStr, [sTable_ZhiKa, FloatToStr(nVal),
+//              FListA.Values['CusID']]);
+//      //xxxxx
+//
+//      gDBConnManager.WorkerExec(FDBConn, nStr);
+//      //freeze money from zhika
+//    end;
 
     nIdx := Length(FOut.FData);
     if Copy(FOut.FData, nIdx, 1) = ',' then
@@ -1419,13 +1419,13 @@ begin
     gDBConnManager.WorkerExec(FDBConn, nStr);
     //释放冻结金
 
-    if nFix = sFlag_Yes then
-    begin
-      nStr := 'Update %s Set Z_FixedMoney=Z_FixedMoney+(%.2f) Where Z_ID=''%s''';
-      nStr := Format(nStr, [sTable_ZhiKa, nMoney, nZK]);
-      gDBConnManager.WorkerExec(FDBConn, nStr);
-      //释放限提金额
-    end;
+//    if nFix = sFlag_Yes then
+//    begin
+//      nStr := 'Update %s Set Z_FixedMoney=Z_FixedMoney+(%.2f) Where Z_ID=''%s''';
+//      nStr := Format(nStr, [sTable_ZhiKa, nMoney, nZK]);
+//      gDBConnManager.WorkerExec(FDBConn, nStr);
+//      //释放限提金额
+//    end;
 
     //--------------------------------------------------------------------------
     nStr := Format('Select * From %s Where 1<>1', [sTable_Bill]);
@@ -2042,13 +2042,13 @@ begin
       nSQL := Format(nSQL, [sTable_CusAccount, m, FCusID]);
       FListA.Add(nSQL); //更新账户
 
-      if nOut.FExtParam = sFlag_Yes then
-      begin
-        nSQL := 'Update %s Set Z_FixedMoney=Z_FixedMoney-(%.2f) ' +
-                'Where Z_ID=''%s''';
-        nSQL := Format(nSQL, [sTable_ZhiKa, m, FZhiKa]);
-        FListA.Add(nSQL); //更新纸卡限提金额
-      end;
+//      if nOut.FExtParam = sFlag_Yes then
+//      begin
+//        nSQL := 'Update %s Set Z_FixedMoney=Z_FixedMoney-(%.2f) ' +
+//                'Where Z_ID=''%s''';
+//        nSQL := Format(nSQL, [sTable_ZhiKa, m, FZhiKa]);
+//        FListA.Add(nSQL); //更新纸卡限提金额
+//      end;
     end;
 
     nVal := 0;

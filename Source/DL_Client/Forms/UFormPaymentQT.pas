@@ -1,8 +1,8 @@
 {*******************************************************************************
   作者: dmzn@163.com 2010-3-17
-  描述: 销售回款
+  描述: 销售回款欠提
 *******************************************************************************}
-unit UFormPayment;
+unit UFormPaymentQT;
 
 interface
 
@@ -14,7 +14,7 @@ uses
   StdCtrls;
 
 type
-  TfFormPayment = class(TfFormNormal)
+  TfFormPaymentQT = class(TfFormNormal)
     dxGroup2: TdxLayoutGroup;
     dxLayout1Item3: TdxLayoutItem;
     EditType: TcxComboBox;
@@ -106,7 +106,7 @@ var
   //全局使用
 
 //------------------------------------------------------------------------------
-class function TfFormPayment.CreateForm(const nPopedom: string;
+class function TfFormPaymentQT.CreateForm(const nPopedom: string;
   const nParam: Pointer): TWinControl;
 var nP: PFormCommandParam;
 begin 
@@ -114,9 +114,9 @@ begin
   if not WorkPCHasPopedom then Exit;
   nP := nParam;
 
-  with TfFormPayment.Create(Application) do
+  with TfFormPaymentQT.Create(Application) do
   try
-    Caption := '货款回收';
+    Caption := '欠提回收';
     if Assigned(nP) then
     begin
       InitFormData(nP.FParamA);
@@ -133,17 +133,17 @@ begin
   end;
 end;
 
-class function TfFormPayment.FormID: integer;
+class function TfFormPaymentQT.FormID: integer;
 begin
-  Result := cFI_FormPayment;
+  Result := cFI_FormPaymentQT;
 end;
 
-procedure TfFormPayment.FormCreate(Sender: TObject);
+procedure TfFormPaymentQT.FormCreate(Sender: TObject);
 begin
   LoadFormConfig(Self);
 end;
 
-procedure TfFormPayment.FormClose(Sender: TObject;
+procedure TfFormPaymentQT.FormClose(Sender: TObject;
   var Action: TCloseAction);
 begin
   SaveFormConfig(Self);
@@ -151,14 +151,14 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure TfFormPayment.InitFormData(const nID: string);
+procedure TfFormPaymentQT.InitFormData(const nID: string);
 var
   nStr : string;
 begin
   FillChar(gInfo, SizeOf(gInfo), #0);
   LoadSaleMan(EditSalesMan.Properties.Items);
 
-  LoadSysDictPayType(EditType.Properties.Items);
+  LoadSysDictQTType(EditType.Properties.Items);
  // EditType.ItemIndex := 0;
   
   if nID <> '' then
@@ -220,7 +220,7 @@ begin
 end;
 
 //Desc: 清理客户信息
-procedure TfFormPayment.ClearCustomerInfo;
+procedure TfFormPaymentQT.ClearCustomerInfo;
 begin
   ListInfo.Clear;
   EditIn.Text := '0';
@@ -231,7 +231,7 @@ begin
 end;
 
 //Desc: 载入nID客户的信息
-function TfFormPayment.LoadCustomerInfo(const nID: string): Boolean;
+function TfFormPaymentQT.LoadCustomerInfo(const nID: string): Boolean;
 var nStr: string;
     nDS: TDataSet;
 begin
@@ -276,7 +276,7 @@ begin
   ActiveControl := EditType;
 end;
 
-procedure TfFormPayment.EditSalesManPropertiesChange(Sender: TObject);
+procedure TfFormPaymentQT.EditSalesManPropertiesChange(Sender: TObject);
 var nStr: string;
 begin
   if EditSalesMan.ItemIndex > -1 then
@@ -286,14 +286,14 @@ begin
   end;
 end;
 
-procedure TfFormPayment.EditNamePropertiesEditValueChanged(Sender: TObject);
+procedure TfFormPaymentQT.EditNamePropertiesEditValueChanged(Sender: TObject);
 begin
   if (EditName.ItemIndex > -1) and EditName.Focused then
     LoadCustomerInfo(GetCtrlData(EditName));
   //xxxxx
 end;
 
-procedure TfFormPayment.EditIDPropertiesButtonClick(Sender: TObject;
+procedure TfFormPaymentQT.EditIDPropertiesButtonClick(Sender: TObject;
   AButtonIndex: Integer);
 begin
   EditID.Text := Trim(EditID.Text);
@@ -305,7 +305,7 @@ begin
 end;
 
 //Desc: 选择客户
-procedure TfFormPayment.EditNameKeyPress(Sender: TObject; var Key: Char);
+procedure TfFormPaymentQT.EditNameKeyPress(Sender: TObject; var Key: Char);
 var nStr: string;
     nP: TFormCommandParam;
 begin
@@ -334,7 +334,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-function TfFormPayment.OnVerifyCtrl(Sender: TObject; var nHint: string): Boolean;
+function TfFormPaymentQT.OnVerifyCtrl(Sender: TObject; var nHint: string): Boolean;
 begin
   Result := True;
 
@@ -370,7 +370,7 @@ begin
   end;
 end;
 
-procedure TfFormPayment.BtnOKClick(Sender: TObject);
+procedure TfFormPaymentQT.BtnOKClick(Sender: TObject);
 var
   nP: TFormCommandParam;
   nPriceStock, nStr, nID : string;
@@ -386,12 +386,12 @@ begin
   begin
     nPriceStock := nPriceStock +' '+ EditStockName3.Text +':'+EditPrice3.Text;
   end;
-  if not SaveCustomerPayment(gInfo.FCusID, gInfo.FCusName,
+  if not SaveCustomerKPPayment(gInfo.FCusID, gInfo.FCusName,
      GetCtrlData(EditSalesMan), sFlag_MoneyHuiKuan, EditType.Text, EditDesc.Text,
      StrToFloat(EditMoney.Text),StrToFloatDef(EditPrice1.Text,0),nPriceStock,EditAcceptNum.Text,
      EditPayingUnit.Text,EditPayingMan.Text, True) then
   begin
-    ShowMsg('回款操作失败', sError); Exit;
+    ShowMsg('欠提回款操作失败', sError); Exit;
   end;
 
   nStr := ' Select Top 1 R_ID From %s Where M_CusID = ''%s'' Order By R_ID Desc ';
@@ -523,7 +523,7 @@ begin
     SmallTOBig := BigMonth;
 end;
 
-procedure TfFormPayment.EditMoneyExit(Sender: TObject);
+procedure TfFormPaymentQT.EditMoneyExit(Sender: TObject);
 var
   nStr: string;
 begin
@@ -533,7 +533,7 @@ begin
   ActiveControl := EditPrice1;
 end;
 
-procedure TfFormPayment.EditPayingUnitKeyPress(Sender: TObject;
+procedure TfFormPaymentQT.EditPayingUnitKeyPress(Sender: TObject;
   var Key: Char);
 var nP: TFormCommandParam;
 begin
@@ -550,7 +550,7 @@ begin
   end;
 end;
 
-procedure TfFormPayment.EditNamePropertiesChange(Sender: TObject);
+procedure TfFormPaymentQT.EditNamePropertiesChange(Sender: TObject);
 var nStr: string;
 begin
   if EditName.ItemIndex > -1 then
@@ -579,5 +579,5 @@ begin
 end;
 
 initialization
-  gControlManager.RegCtrl(TfFormPayment, TfFormPayment.FormID);
+  gControlManager.RegCtrl(TfFormPaymentQT, TfFormPaymentQT.FormID);
 end.

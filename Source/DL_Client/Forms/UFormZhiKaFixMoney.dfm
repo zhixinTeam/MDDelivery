@@ -1,32 +1,32 @@
 inherited fFormZhiKaFixMoney: TfFormZhiKaFixMoney
   Left = 578
   Top = 226
-  ClientHeight = 480
-  ClientWidth = 475
+  ClientHeight = 384
+  ClientWidth = 380
   OnClose = FormClose
   OnCreate = FormCreate
-  PixelsPerInch = 120
-  TextHeight = 15
+  PixelsPerInch = 96
+  TextHeight = 12
   inherited dxLayout1: TdxLayoutControl
-    Width = 475
-    Height = 480
+    Width = 380
+    Height = 384
     AutoControlAlignment = False
     inherited BtnOK: TButton
-      Left = 293
-      Top = 438
+      Left = 234
+      Top = 351
       Caption = #30830#23450
       TabOrder = 8
     end
     inherited BtnExit: TButton
-      Left = 380
-      Top = 438
+      Left = 304
+      Top = 351
       TabOrder = 9
     end
     object ListInfo: TcxMCListBox [2]
-      Left = 29
-      Top = 45
-      Width = 467
-      Height = 138
+      Left = 23
+      Top = 36
+      Width = 374
+      Height = 110
       HeaderSections = <
         item
           Text = #20449#24687#39033
@@ -35,73 +35,73 @@ inherited fFormZhiKaFixMoney: TfFormZhiKaFixMoney
         item
           AutoSize = True
           Text = #20449#24687#20869#23481
-          Width = 389
+          Width = 296
         end>
       ParentFont = False
       Style.Edges = [bLeft, bTop, bRight, bBottom]
       TabOrder = 0
     end
     object EditZK: TcxTextEdit [3]
-      Left = 87
-      Top = 220
+      Left = 81
+      Top = 154
       ParentFont = False
       Properties.ReadOnly = True
       TabOrder = 1
-      Width = 132
+      Width = 105
     end
     object EditOut: TcxTextEdit [4]
-      Left = 282
-      Top = 285
+      Left = 249
+      Top = 211
       ParentFont = False
       Properties.ReadOnly = True
       TabOrder = 3
       Text = '0'
-      Width = 152
+      Width = 121
     end
     object EditIn: TcxTextEdit [5]
-      Left = 87
-      Top = 285
+      Left = 81
+      Top = 211
       ParentFont = False
       Properties.MaxLength = 15
       Properties.ReadOnly = True
       TabOrder = 2
       Text = '0'
-      Width = 132
+      Width = 105
     end
     object EditFreeze: TcxTextEdit [6]
-      Left = 87
-      Top = 310
+      Left = 81
+      Top = 236
       ParentFont = False
       Properties.ReadOnly = True
       TabOrder = 4
       Text = '0'
-      Width = 132
+      Width = 105
     end
     object EditValid: TcxTextEdit [7]
-      Left = 282
-      Top = 310
+      Left = 249
+      Top = 236
       ParentFont = False
       Properties.ReadOnly = True
       TabOrder = 5
       Text = '0'
-      Width = 152
+      Width = 121
     end
     object EditMoney: TcxTextEdit [8]
-      Left = 87
-      Top = 375
+      Left = 81
+      Top = 293
       ParentFont = False
       TabOrder = 6
-      Width = 152
+      Width = 121
     end
     object Check1: TcxCheckBox [9]
-      Left = 29
-      Top = 400
+      Left = 23
+      Top = 318
       Caption = #38480#21046#35813#32440#21345#30340#21487#25552#36135#37327'.'
       ParentFont = False
       TabOrder = 7
       Transparent = True
       OnClick = Check1Click
-      Width = 151
+      Width = 121
     end
     inherited dxLayout1Group_Root: TdxLayoutGroup
       inherited dxGroup1: TdxLayoutGroup

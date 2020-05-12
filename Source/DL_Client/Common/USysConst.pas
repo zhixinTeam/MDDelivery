@@ -42,6 +42,8 @@ const
   cFI_FramePayment      = $0022;                     //销售回款
   cFI_FrameCusCredit    = $0023;                     //信用管理
   cFI_FramePayMentEx    = $0024;                     //临时回款
+  cFI_FramePaymentQT    = $0025;                     //欠提回款
+  cFI_FormQTInfo        = $0026;                     //欠提信息编辑
 
   cFI_FrameLadingDai    = $0030;                     //袋装提货
   cFI_FramePoundQuery   = $0031;                     //磅房查询
@@ -77,6 +79,7 @@ const
   cFI_FrameZhiKaDetail  = $0055;                     //纸卡明细
   cFI_FrameDispatchQuery = $0056;                    //调度查询
   cFI_FrameOrderDetailQuery = $0057;                 //采购明细
+  cFI_FrameOrderTotalQuery  = $0058;                 //采购结算单
 
   cFI_FrameSaleInvoice  = $0061;                     //发票管理
   cFI_FrameMakeInvoice  = $0062;                     //开具发票
@@ -94,6 +97,8 @@ const
   cFI_FormDriverWh      = $2074;                     //司机信息编辑
   cFI_FormKDInfo        = $2075;                     //矿点信息编辑
   cFI_FrameKDInfo       = $2076;                     //矿点信息维护
+  cFI_FramePayingUnit   = $2077;                     //交款单位维护
+  cFI_FormPayingUnit    = $2078;                     //交款单位编辑
 
   cFI_FramePMaterailControl= $0077;                  //原材料进厂控制
   cFI_FormPMaterailControl= $1098;                   //原材料进厂控制
@@ -137,6 +142,7 @@ const
   cFI_FormCusCredit     = $1019;                     //信用变动
   cFI_FormPayment       = $1020;                     //销售回款
   cFI_FormKPPayment     = $2020;                     //开票室销售回款
+  cFI_FormPaymentQT     = $2021;                     //欠提回款
   cFI_FormTruckIn       = $1021;                     //车辆进厂
   cFI_FormTruckOut      = $1022;                     //车辆出厂
   cFI_FormVerifyCard    = $1023;                     //磁卡验证
@@ -408,6 +414,7 @@ begin
   AddMenuModuleItem('MAIN_C08', cFI_FrameSaleZZ);
   AddMenuModuleItem('MAIN_C09', cFI_FrameSalesCredit);
   AddMenuModuleItem('MAIN_C10', cFI_FramePaymentEx);
+  AddMenuModuleItem('MAIN_C11', cFI_FramePaymentQT);
 
   AddMenuModuleItem('MAIN_D01', cFI_FormZhiKa, mtForm);
   AddMenuModuleItem('MAIN_D02', cFI_FrameMakeCard);
@@ -464,6 +471,7 @@ begin
   AddMenuModuleItem('MAIN_L09', cFI_FrameSaleJS);
   AddMenuModuleItem('MAIN_L10', cFI_FrameOrderDetailQuery);
   AddMenuModuleItem('MAIN_L28', cFI_FrameSaletunnelQuery);
+  AddMenuModuleItem('MAIN_L29', cFI_FrameOrderTotalQuery);
   //财务报表
   AddMenuModuleItem('MAIN_L11', cFI_FrameNotice);
   AddMenuModuleItem('MAIN_L12', cFI_FrameDaySales);
@@ -493,6 +501,7 @@ begin
 
   AddMenuModuleItem('MAIN_X01', cFI_FrameXHSpot);
   AddMenuModuleItem('MAIN_X02', cFI_FrameDriverWh);
+  AddMenuModuleItem('MAIN_X03', cFI_FramePayingUnit);
 
   AddMenuModuleItem('MAIN_M01', cFI_FrameProvider);
   AddMenuModuleItem('MAIN_M02', cFI_FrameMaterails);

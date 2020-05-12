@@ -330,7 +330,7 @@ begin
   if FNewLID = '' then Exit;
   
   nStr := ' Update %s Set  L_Truck = ''%s'',L_Card = ''%s'', L_HdOrderId = ''%s''  Where L_ID = ''%s'' ';
-  nStr := Format(nStr, [sTable_Bill, EditTruck.Text, FCard, EditZhiKa.Text, FNewLID]);
+  nStr := Format(nStr, [sTable_Bill, EditTruck.Text, FCard, EditLID.Text, FNewLID]);
   FDM.ExecuteSQL(nStr);
 
 //  nStr := ' Update %s Set  T_Truck = ''%s''   Where T_Truck = ''%s'' ';
@@ -338,7 +338,7 @@ begin
 //  FDM.ExecuteSQL(nStr);
 
   nStr := ' Update %s Set L_HdOrderId = ''%s'' Where L_ID = ''%s'' ';
-  nStr := Format(nStr, [sTable_Bill, EditZhiKa.Text, EditLID.Text]);
+  nStr := Format(nStr, [sTable_Bill, EditLID.Text, EditLID.Text]);
   FDM.ExecuteSQL(nStr);
 
   ShowMsg('Æ´µ¥³É¹¦', sHint);

@@ -2,7 +2,7 @@
   作者: dmzn@163.com 2009-7-15
   描述: 销售回款
 *******************************************************************************}
-unit UFramePayment;
+unit UFramePaymentQT;
 
 interface
 
@@ -17,7 +17,7 @@ uses
   ComCtrls, ToolWin, Menus;
 
 type
-  TfFramePayment = class(TfFrameNormal)
+  TfFramePaymentQT = class(TfFrameNormal)
     cxTextEdit1: TcxTextEdit;
     dxLayout1Item1: TdxLayoutItem;
     EditID: TcxButtonEdit;
@@ -29,9 +29,9 @@ type
     cxTextEdit4: TcxTextEdit;
     dxLayout1Item7: TdxLayoutItem;
     PMenu1: TPopupMenu;
-    N1: TMenuItem;
     N2: TMenuItem;
     N3: TMenuItem;
+    N4: TMenuItem;
     procedure EditDatePropertiesButtonClick(Sender: TObject;
       AButtonIndex: Integer);
     procedure EditTruckPropertiesButtonClick(Sender: TObject;
@@ -41,6 +41,7 @@ type
     procedure cxView1DblClick(Sender: TObject);
     procedure N1Click(Sender: TObject);
     procedure N3Click(Sender: TObject);
+    procedure N4Click(Sender: TObject);
   private
     { Private declarations }
   protected
@@ -63,30 +64,30 @@ uses
   UDataModule;
 
 //------------------------------------------------------------------------------
-class function TfFramePayment.FrameID: integer;
+class function TfFramePaymentQT.FrameID: integer;
 begin
-  Result := cFI_FramePayment;
+  Result := cFI_FramePaymentQT;
 end;
 
-procedure TfFramePayment.OnCreateFrame;
+procedure TfFramePaymentQT.OnCreateFrame;
 begin
   inherited;
   InitDateRange(Name, FStart, FEnd);
 end;
 
-procedure TfFramePayment.OnDestroyFrame;
+procedure TfFramePaymentQT.OnDestroyFrame;
 begin
   SaveDateRange(Name, FStart, FEnd);
   inherited;
 end;
 
-function TfFramePayment.InitFormDataSQL(const nWhere: string): string;
+function TfFramePaymentQT.InitFormDataSQL(const nWhere: string): string;
 begin
   EditDate.Text := Format('%s 至 %s', [Date2Str(FStart), Date2Str(FEnd)]);
   
   Result := 'Select iom.*,sm.S_Name From $IOM iom ' +
             ' Left Join $SM sm On sm.S_ID=iom.M_SaleMan ' +
-            'Where M_Type=''$HK'' And M_Payment not like ''%%欠提%%'' ';
+            'Where M_Type=''$HK'' And M_Payment like ''%%欠提%%'' ';
             
   if nWhere = '' then
        Result := Result + 'And (M_Date>=''$Start'' And M_Date <''$End'')'
@@ -100,11 +101,11 @@ end;
 
 //------------------------------------------------------------------------------
 //Desc: 回款
-procedure TfFramePayment.BtnAddClick(Sender: TObject);
+procedure TfFramePaymentQT.BtnAddClick(Sender: TObject);
 var nP: TFormCommandParam;
 begin
   nP.FParamA := '';
-  CreateBaseFormItem(cFI_FormPayment, '', @nP);
+  CreateBaseFormItem(cFI_FormPaymentQT, '', @nP);
 
   if (nP.FCommand = cCmd_ModalResult) and (nP.FParamA = mrOK) then
   begin
@@ -113,12 +114,12 @@ begin
 end;
 
 //Desc: 特定客户回款
-procedure TfFramePayment.cxView1DblClick(Sender: TObject);
+procedure TfFramePaymentQT.cxView1DblClick(Sender: TObject);
 var nP: TFormCommandParam;
 begin
   if cxView1.DataController.GetSelectedCount < 1 then Exit;
   nP.FParamA := SQLQuery.FieldByName('M_CusID').AsString;
-  CreateBaseFormItem(cFI_FormPayment, '', @nP);
+  CreateBaseFormItem(cFI_FormPaymentQT, '', @nP);
 
   if (nP.FCommand = cCmd_ModalResult) and (nP.FParamA = mrOK) then
   begin
@@ -127,7 +128,7 @@ begin
 end;
 
 //Desc: 纸卡回款
-procedure TfFramePayment.BtnEditClick(Sender: TObject);
+procedure TfFramePaymentQT.BtnEditClick(Sender: TObject);
 var nP: TFormCommandParam;
 begin
   CreateBaseFormItem(cFI_FormPaymentZK, '', @nP);
@@ -138,14 +139,14 @@ begin
 end;
 
 //Desc: 日期筛选
-procedure TfFramePayment.EditDatePropertiesButtonClick(Sender: TObject;
+procedure TfFramePaymentQT.EditDatePropertiesButtonClick(Sender: TObject;
   AButtonIndex: Integer);
 begin
   if ShowDateFilterForm(FStart, FEnd) then InitFormData(FWhere);
 end;
 
 //Desc: 执行查询
-procedure TfFramePayment.EditTruckPropertiesButtonClick(Sender: TObject;
+procedure TfFramePaymentQT.EditTruckPropertiesButtonClick(Sender: TObject;
   AButtonIndex: Integer);
 begin
   if Sender = EditID then
@@ -159,7 +160,7 @@ begin
   end else
 end;
 
-procedure TfFramePayment.N1Click(Sender: TObject);
+procedure TfFramePaymentQT.N1Click(Sender: TObject);
 var
   nStr, nRID, nRuZhang : string;
 begin
@@ -190,7 +191,7 @@ begin
   end;
 end;
 
-procedure TfFramePayment.N3Click(Sender: TObject);
+procedure TfFramePaymentQT.N3Click(Sender: TObject);
 var
   nStr, nRID, nSql,nPayingUnit,nMoney : string;
   nPayingMan,nDesc,nPriceStock,nType,nAcceptNum : string;
@@ -233,6 +234,22 @@ begin
   end;
 end;
 
+procedure TfFramePaymentQT.N4Click(Sender: TObject);
+var
+  nP: TFormCommandParam;
+begin
+  if cxView1.DataController.GetSelectedCount > 0 then
+  begin
+    nP.FCommand := cCmd_EditData;
+    nP.FParamA  := SQLQuery.FieldByName('R_ID').AsString;
+    nP.FParamB  := SQLQuery.FieldByName('M_Memo').AsString;
+    nP.FParamC  := SQLQuery.FieldByName('M_RuZhang').AsString;
+    CreateBaseFormItem(cFI_FormQTInfo, '', @nP);
+
+    InitFormData(FWhere);
+  end;
+end;
+
 initialization
-  gControlManager.RegCtrl(TfFramePayment, TfFramePayment.FrameID);
+  gControlManager.RegCtrl(TfFramePaymentQT, TfFramePaymentQT.FrameID);
 end.

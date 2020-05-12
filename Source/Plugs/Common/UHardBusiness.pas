@@ -408,6 +408,48 @@ end;
 
 //Date: 2012-4-22
 //Parm: 卡号
+//Desc: 增加刷卡输出日志
+procedure GetTruckInfo(const nCard,nReader: string);
+var nStr,nTruck,nCardType: string;
+    nTrucks: TLadingBillItems;
+    nRet: Boolean;
+    nMsg: string;
+begin
+  nCardType := '';
+  if not GetCardUsed(nCard, nCardType) then Exit;
+
+  if nCardType = sFlag_Provide then
+    nRet := GetLadingOrders(nCard, sFlag_TruckIn, nTrucks) else
+  if nCardType = sFlag_Sale then
+    nRet := GetLadingBills(nCard, sFlag_TruckIn, nTrucks) else
+  if nCardType = sFlag_DuanDao then
+    nRet := GetDuanDaoItems(nCard, sFlag_TruckIn, nTrucks) else nRet := False;
+
+  if not nRet then
+  begin
+    nStr := '读取磁卡[ %s ]订单信息失败.';
+    nStr := Format(nStr, [nCard]);
+
+    WriteHardHelperLog(nStr, '刷卡');
+    Exit;
+  end;
+
+  if Length(nTrucks) < 1 then
+  begin
+    nStr := '磁卡[ %s ]没有对应车辆.';
+    nStr := Format(nStr, [nCard]);
+
+    WriteHardHelperLog(nStr, '刷卡');
+    Exit;
+  end;
+
+  nStr := '读卡器:[ %s ]磁卡:[ %s ]车辆:[ %s ]单号:[ %s ]';
+  nStr := Format(nStr, [nReader,nCard,nTrucks[0].FTruck,nTrucks[0].FID]);
+  WriteHardHelperLog(nStr, sPost_In);
+end;
+
+//Date: 2012-4-22
+//Parm: 卡号
 //Desc: 对nCard放行进厂
 procedure MakeTruckIn(const nCard,nReader: string; const nDB: PDBWorker;
                       const nReaderType: string = '');
@@ -872,6 +914,9 @@ begin
     else nReaderType := '';
 
     try
+      //增加刷卡日志输出
+      GetTruckInfo(nCard, nReader.FID);
+      
       if nReader.FType = rtIn then
       begin
         MakeTruckIn(nCard, nReader.FID, nDBConn, nReaderType);

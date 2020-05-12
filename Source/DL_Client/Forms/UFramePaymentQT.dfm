@@ -1,4 +1,4 @@
-inherited fFramePayment: TfFramePayment
+inherited fFramePaymentQT: TfFramePaymentQT
   Width = 686
   Height = 370
   inherited ToolBar1: TToolBar
@@ -123,7 +123,7 @@ inherited fFramePayment: TfFramePayment
   inherited TitlePanel1: TZnBitmapPanel
     Width = 686
     inherited TitleBar: TcxLabel
-      Caption = #36135#27454#22238#25910#35760#24405
+      Caption = #27424#25552#22238#25910#35760#24405
       Style.IsFontAssigned = True
       Width = 686
       AnchorX = 343
@@ -142,9 +142,9 @@ inherited fFramePayment: TfFramePayment
     AutoHotkeys = maManual
     Left = 4
     Top = 264
-    object N1: TMenuItem
-      Caption = #20837#36134#23457#26680
-      OnClick = N1Click
+    object N4: TMenuItem
+      Caption = #20462#25913#36824#27454#20449#24687
+      OnClick = N4Click
     end
     object N2: TMenuItem
       Caption = '-'

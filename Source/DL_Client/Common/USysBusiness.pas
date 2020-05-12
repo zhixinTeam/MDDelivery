@@ -79,6 +79,10 @@ function GetCardUsed(const nCard: string): string;
 
 function LoadSysDictItem(const nItem: string; const nList: TStrings): TDataSet;
 //读取系统字典项
+function LoadSysDictPayType(const nList: TStrings): TDataSet;
+//读取系统付款方式
+function LoadSysDictQTType(const nList: TStrings): TDataSet;
+//读取系统欠提方式
 function LoadSaleMan(const nList: TStrings; const nWhere: string = ''): Boolean;
 //读取业务员列表
 function LoadCustomer(const nList: TStrings; const nWhere: string = ''): Boolean;
@@ -1109,6 +1113,50 @@ begin
     while not Eof do
     begin
       nList.Add(FieldByName('D_Value').AsString);
+      Next;
+    end;
+  end else Result := nil;
+end;
+
+function LoadSysDictPayType(const nList: TStrings): TDataSet;
+var nStr: string;
+begin
+  nList.Clear;
+  nStr := MacroValue(sQuery_SysDict, [MI('$Table', sTable_SysDict),
+                                      MI('$Name', sFlag_PaymentItem2)]);
+  Result := FDM.QueryTemp(nStr);
+
+  if Result.RecordCount > 0 then
+  with Result do
+  begin
+    First;
+
+    while not Eof do
+    begin
+      if Pos('欠提',FieldByName('D_Value').AsString) < 1 then
+        nList.Add(FieldByName('D_Value').AsString);
+      Next;
+    end;
+  end else Result := nil;
+end;
+
+function LoadSysDictQTType(const nList: TStrings): TDataSet;
+var nStr: string;
+begin
+  nList.Clear;
+  nStr := MacroValue(sQuery_SysDict, [MI('$Table', sTable_SysDict),
+                                      MI('$Name', sFlag_PaymentItem2)]);
+  Result := FDM.QueryTemp(nStr);
+
+  if Result.RecordCount > 0 then
+  with Result do
+  begin
+    First;
+
+    while not Eof do
+    begin
+      if Pos('欠提',FieldByName('D_Value').AsString) > 0 then
+        nList.Add(FieldByName('D_Value').AsString);
       Next;
     end;
   end else Result := nil;
@@ -4334,15 +4382,20 @@ begin
   nStr := ' update Sys_CustomerInOutMoney set M_PayType = '+
           ' (select D_Index from Sys_Dict where D_Name= ''PaymentItem2'' and D_Value=M_Payment)';
   FDM.ExecuteSQL(nStr);
+
+  //初始化
+  nStr := ' update S_ZhiKa set Z_FixedMoney = 0';
+  FDM.ExecuteSQL(nStr);
+
   //校正纸卡限提1
   nStr := ' update S_ZhiKa set Z_FixedMoney  = M_Money From( ' +
-          ' Select Sum(M_Money) M_Money, M_CusID,M_PayType from ( ' +
+          ' Select Sum(isnull(M_Money,0)) M_Money, M_CusID,M_PayType from ( ' +
           ' select M_Money, M_CusID,M_PayType from Sys_CustomerInOutMoney ' +
           '  ) t Group by M_CusID,M_PayType) b where Z_Customer = b.M_CusID and Z_PayType= M_PayType ';
   FDM.ExecuteSQL(nStr);
   //校正纸卡限提2
   nStr := ' update S_ZhiKa set Z_FixedMoney  = Z_FixedMoney-L_Money From( ' +
-          ' Select Sum(L_Money) L_Money, L_CusID,L_ZhiKa from ( ' +
+          ' Select isnull(Sum(L_Money),0) L_Money, L_CusID,L_ZhiKa from ( ' +
           ' select isnull(L_Value,0) * isnull(L_Price,0) as L_Money, L_CusID,L_ZhiKa from S_Bill ' +
           '  ) t Group by L_CusID,L_ZhiKa) b where Z_Customer = b.L_CusID and Z_ID= b.L_ZhiKa ';
   FDM.ExecuteSQL(nStr);

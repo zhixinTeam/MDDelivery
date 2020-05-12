@@ -88,6 +88,7 @@ type
     function GetCustomerValidMoney(var nData: string): Boolean;
     //获取客户可用金
     function GetCusMoney(var nCusId: string;var nMoney:Double): Boolean;
+    procedure CheckZhiKaXTMoney;
     function GetZhiKaValidMoney(var nData: string): Boolean;
     //获取纸卡可用金
     function GetZhiKaValidMoneyEx(var nData: string): Boolean;
@@ -783,6 +784,8 @@ function TWorkerBusinessCommander.GetZhiKaValidMoney(var nData: string): Boolean
 var nStr, nCusId: string;
     nVal,nMoney,nCredit, nSalesCredit: Double;
 begin
+  //校正资金
+  CheckZhiKaXTMoney;
   nStr := 'Select ca.*,Z_OnlyMoney,Z_FixedMoney From $ZK,$CA ca ' +
           'Where Z_ID=''$ZID'' and A_CID=Z_Customer';
   nStr := MacroValue(nStr, [MI('$ZK', sTable_ZhiKa), MI('$ZID', FIn.FData),
@@ -826,30 +829,6 @@ begin
       nVal := nVal + nCredit;
       //信用未过期
     end;
-
-    //使用业务员授信
-    {$IFDEF UseSalesCredit}
-      nStr := 'select C_SaleMan from %s where C_Id=''%s''';
-      nStr := Format(nstr,[sTable_Customer, nCusId]);
-      with gDBConnManager.WorkerQuery(FDBConn, nStr) do
-      begin
-        if RecordCount =  1 then
-        begin
-          if Trim(FieldByName('C_SaleMan').AsString) <> '' then
-          begin
-            nStr := FieldByName('C_SaleMan').AsString;
-            nSalesCredit := GetSalesCredit(nStr);
-            WriteLog('业务员['+ nStr +']信用GetZhikaMoney:'+floattostr(nSalesCredit));
-          end;
-        end;
-      end;
-
-      if nVal < 0 then
-        nVal := nSalesCredit
-      else
-        nVal := nVal + nSalesCredit;
-      WriteLog('纸卡['+fin.FData+']可用金额:'+floattostr(nVal));
-    {$ENDIF}
 
     nVal := Float2PInt(nVal, cPrecision, False) / cPrecision;
     //total money
@@ -2091,6 +2070,55 @@ begin
   nData := sFlag_Yes;
   FOut.FData := nData;
   Result := True;
+end;
+
+procedure TWorkerBusinessCommander.CheckZhiKaXTMoney;
+var
+  nStr: string;
+begin
+  FDBConn.FConn.BeginTrans;
+  try
+    //校正纸卡付款方式
+    nStr := ' update S_ZhiKa set Z_PayType = (select D_Index from Sys_Dict ' +
+            ' where D_Name= ''PaymentItem'' and D_Value=Z_Payment)';
+    gDBConnManager.WorkerExec(FDBConn, nStr);
+    //校正出入金付款方式
+    nStr := ' update Sys_CustomerInOutMoney set M_PayType = '+
+            ' (select D_Index from Sys_Dict where D_Name= ''PaymentItem2'' and D_Value=M_Payment)';
+     gDBConnManager.WorkerExec(FDBConn, nStr);
+
+    //初始化
+    nStr := ' update S_ZhiKa set Z_FixedMoney = 0';
+     gDBConnManager.WorkerExec(FDBConn, nStr);
+
+    //校正纸卡限提1
+    nStr := ' update S_ZhiKa set Z_FixedMoney  = M_Money From( ' +
+            ' Select Sum(isnull(M_Money,0)) M_Money, M_CusID,M_PayType from ( ' +
+            ' select M_Money, M_CusID,M_PayType from Sys_CustomerInOutMoney ' +
+            '  ) t Group by M_CusID,M_PayType) b where Z_Customer = b.M_CusID and Z_PayType= M_PayType ';
+     gDBConnManager.WorkerExec(FDBConn, nStr);
+    //校正纸卡限提2
+    nStr := ' update S_ZhiKa set Z_FixedMoney  = Z_FixedMoney-L_Money From( ' +
+            ' Select isnull(Sum(L_Money),0) L_Money, L_CusID,L_ZhiKa from ( ' +
+            ' select isnull(L_Value,0) * isnull(L_Price,0) as L_Money, L_CusID,L_ZhiKa from S_Bill ' +
+            '  ) t Group by L_CusID,L_ZhiKa) b where Z_Customer = b.L_CusID and Z_ID= b.L_ZhiKa ';
+     gDBConnManager.WorkerExec(FDBConn, nStr);
+    //校正纸卡限提标识1
+    nStr := ' update S_ZhiKa set Z_OnlyMoney= ''Y'' where Z_Customer ' +
+            ' not in (select A_CID from Sys_CustomerAccount ' +
+            ' where A_CreditLimit >0 Group by A_CID ) ';
+     gDBConnManager.WorkerExec(FDBConn, nStr);
+    //校正纸卡限提标识2
+    nStr := ' update S_ZhiKa set Z_OnlyMoney= NULL where Z_Customer ' +
+            ' in (select A_CID from Sys_CustomerAccount ' +
+            ' where A_CreditLimit >0 Group by A_CID ) ';
+     gDBConnManager.WorkerExec(FDBConn, nStr);
+
+    FDBConn.FConn.CommitTrans;
+  except
+    FDBConn.FConn.RollbackTrans;
+    raise;
+  end;
 end;
 
 initialization

@@ -17,6 +17,7 @@ uses
   UFrameSaleContract, UFormSaleContract, UFrameZhiKa, UFormZhiKa,
   UFormGetContract, UFormZhiKaAdjust, UFormZhiKaFixMoney, UFrameZhiKaVerify,
   UFormZhiKaVerify, UFrameShouJu, UFormShouJu, UFramePayment, UFormPayment,
+  UFramePaymentQT, UFormPaymentQT, UFormQTInfo,
   UFrameCustomerCredit, UFormCustomerCredit, UFrameCusAccount,UFramePaymentEx,
   UFrameCusInOutMoney, UFrameInvoiceWeek, UFormInvoiceWeek, UFormInvoiceGetWeek,
   UFrameInvoice, UFormInvoice, UFormInvoiceAdjust,UFrameInvoiceK, UFormInvoiceK,
@@ -40,7 +41,7 @@ uses
    UMgrSDTReader,UFormSealInfo,//铅封输入
   {.$IFDEF XAZL}
   UFramePurchaseOrder, UFormPurchaseOrder, UFormPurchasing,
-  UFrameQueryOrderDetail, UFrameOrderCard,  UFrameOrderDetail,
+  UFrameQueryOrderDetail, UFrameQueryOrderTotal, UFrameOrderCard,  UFrameOrderDetail,
   UFormGetProvider, UFormGetMeterails, UFramePOrderBase, UFormPOrderBase,
   UFormGetPOrderBase, UFormOrderDtl, UFormGetPayingUnit,
   {.$ENDIF}
@@ -53,7 +54,8 @@ uses
   UFormGetWechartAccount, UFrameAuditTruck, UFormAuditTruck, UFrameBillBuDanAudit,
   UFormHYStock, UFormHYData, UFormHYRecord, UFormGetStockNo, UFrameXHSpot,UFormXHSpot,
   UFrameHYStock, UFrameHYData, UFrameHYRecord, UFormTransfer, UFrameTransfer,
-  UFrameDriverWh,UFormDriverWh,UFormKDInfo,UFrameKDInfo,UFrameSCustomerControl, UFormSCustomerControl,
+  UFrameDriverWh,UFormDriverWh,UFormKDInfo,UFrameKDInfo,UFrameSCustomerControl,
+  UFormSCustomerControl, UFramePayingUnit,UFormPayingUnit,
   
   //东义财务报表
   UFrameNotice, UFrameDaySals, UFrameMonthSales, UFrameDayPrice,

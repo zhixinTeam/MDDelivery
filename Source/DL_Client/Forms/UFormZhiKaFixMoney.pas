@@ -214,18 +214,18 @@ begin
 
   if not CheckFixMoneyValid(gInfo.FZhiKa, StrToFloat(EditMoney.Text)) then Exit;
   //验证限提金
-
-  nStr := 'Update %s Set Z_FixedMoney=$My,Z_OnlyMoney=$F ' +
-          'Where Z_ID=''%s''';
-  nStr := Format(nStr, [sTable_ZhiKa, gInfo.FZhiKa]);
-
-  if Check1.Checked then
-  begin
-    nStr := MacroValue(nStr, [MI('$My', EditMoney.Text)]);
-    nStr := MacroValue(nStr, [MI('$F', '''' + sFlag_Yes + '''')]);
-  end else nStr := MacroValue(nStr, [MI('$My', 'Null'), MI('$F', 'Null')]);
-
-  FDM.ExecuteSQL(nStr);
+//
+//  nStr := 'Update %s Set Z_FixedMoney=$My,Z_OnlyMoney=$F ' +
+//          'Where Z_ID=''%s''';
+//  nStr := Format(nStr, [sTable_ZhiKa, gInfo.FZhiKa]);
+//
+//  if Check1.Checked then
+//  begin
+//    nStr := MacroValue(nStr, [MI('$My', EditMoney.Text)]);
+//    nStr := MacroValue(nStr, [MI('$F', '''' + sFlag_Yes + '''')]);
+//  end else nStr := MacroValue(nStr, [MI('$My', 'Null'), MI('$F', 'Null')]);
+//
+//  FDM.ExecuteSQL(nStr);
   //xxxxx
 
   if Check1.Checked then

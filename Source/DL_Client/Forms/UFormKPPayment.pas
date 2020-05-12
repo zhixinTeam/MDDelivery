@@ -126,6 +126,7 @@ begin
       InitFormData('');
       ShowModal;
     end;
+    EditPayingUnit.Properties.IncrementalSearch := False;
   finally
     Free;
   end;
@@ -156,7 +157,7 @@ begin
   FillChar(gInfo, SizeOf(gInfo), #0);
   LoadSaleMan(EditSalesMan.Properties.Items);
 
-  LoadSysDictItem(sFlag_PaymentItem2, EditType.Properties.Items);
+  LoadSysDictPayType(EditType.Properties.Items);
 //  EditType.ItemIndex := 0;
   
   if nID <> '' then
@@ -370,7 +371,7 @@ end;
 
 procedure TfFormKPPayment.BtnOKClick(Sender: TObject);
 var nP: TFormCommandParam;
-  nStr: string;
+  nStr, nID: string;
   nSumMoney, nUsedMoney: Double;
   nPriceStock : string;
 begin
@@ -421,6 +422,13 @@ begin
   begin
     ShowMsg('临时回款操作失败', sError); Exit;
   end;
+
+  nStr := ' Select Top 1 R_ID From %s Where M_CusID = ''%s'' Order By R_ID Desc ';
+  nStr := Format(nStr, [sTable_InOutMoney, gInfo.FCusID]);
+  with FDM.QueryTemp(nStr) do
+  begin
+    nID := Fields[0].AsString; 
+  end;
   
   //保存交货单位信息
   nStr := ' Select Count(*) From %s Where P_PayingUnit=''%s'' and P_CustID = ''%s'' ';
@@ -435,20 +443,20 @@ begin
     FDM.ExecuteSQL(nStr);
   end;
 
-  if StrToFloat(EditMoney.Text) > 0 then
-  begin
-    nP.FCommand := cCmd_AddData;
-    nP.FParamA  := EditPayingUnit.Text;
-    if Trim(EditAcceptNum.Text) <> '' then
-      nP.FParamB  := EditType.Text +'('+Trim(EditAcceptNum.Text)+')'
-    else
-      nP.FParamB  := EditType.Text;
-    nP.FParamC  := EditMoney.Text;
-    nP.FParamD  := EditPayingMan.Text;
-    nP.FParamE  := EditDesc.Text;
-    nP.FParamF  := nPriceStock;
-    CreateBaseFormItem(cFI_FormShouJu, '', @nP);
-  end;
+  //回冲也生成收据
+  nP.FCommand := cCmd_AddData;
+  nP.FParamA  := EditPayingUnit.Text;
+  if Trim(EditAcceptNum.Text) <> '' then
+    nP.FParamB  := EditType.Text +'('+Trim(EditAcceptNum.Text)+')'
+  else
+    nP.FParamB  := EditType.Text;
+  nP.FParamC  := EditMoney.Text;
+  nP.FParamD  := EditPayingMan.Text;
+  nP.FParamE  := EditDesc.Text;
+  nP.FParamF  := nPriceStock;
+  nP.FParamG  := nID;
+  CreateBaseFormItem(cFI_FormShouJu, '', @nP);
+
   //校正纸卡限提
   CheckZhiKaXTMoney;
   
@@ -461,16 +469,16 @@ procedure TfFormKPPayment.EditPayingUnitKeyPress(Sender: TObject;
 var nP: TFormCommandParam;
 begin
   inherited;
-  if (Key = Char(VK_SPACE)) then
-  begin
-    Key := #0;
-    nP.FParamA := EditPayingUnit.Text;
-    CreateBaseFormItem(cFI_FormGetPayingUnit, '', @nP);
-
-    if (nP.FCommand = cCmd_ModalResult) and(nP.FParamA = mrOk) then
-      EditPayingUnit.Text := nP.FParamB;
-    EditPayingUnit.SelectAll;
-  end;
+//  if (Key = Char(VK_SPACE)) then
+//  begin
+//    Key := #0;
+//    nP.FParamA := EditPayingUnit.Text;
+//    CreateBaseFormItem(cFI_FormGetPayingUnit, '', @nP);
+//
+//    if (nP.FCommand = cCmd_ModalResult) and(nP.FParamA = mrOk) then
+//      EditPayingUnit.Text := nP.FParamB;
+//    EditPayingUnit.SelectAll;
+//  end;
 end;
 
 procedure TfFormKPPayment.EditNamePropertiesChange(Sender: TObject);

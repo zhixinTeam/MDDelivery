@@ -223,6 +223,8 @@ inherited fFormKPPayment: TfFormKPPayment
     object EditPayingUnit: TcxComboBox [22]
       Left = 87
       Top = 431
+      ParentFont = False
+      Properties.IncrementalSearch = False
       TabOrder = 18
       Width = 121
     end

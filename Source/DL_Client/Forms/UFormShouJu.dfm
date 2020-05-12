@@ -13,12 +13,12 @@ inherited fFormShouJu: TfFormShouJu
     inherited BtnOK: TButton
       Left = 366
       Top = 362
-      TabOrder = 13
+      TabOrder = 14
     end
     inherited BtnExit: TButton
       Left = 436
       Top = 362
-      TabOrder = 14
+      TabOrder = 15
     end
     object EditDate: TcxDateEdit [2]
       Left = 81
@@ -68,34 +68,34 @@ inherited fFormShouJu: TfFormShouJu
     end
     object EditName: TcxTextEdit [6]
       Left = 81
-      Top = 106
-      Hint = 'T.S_Sender'
-      ParentFont = False
-      Properties.MaxLength = 100
-      TabOrder = 5
-      Width = 403
-    end
-    object EditReason: TcxTextEdit [7]
-      Left = 81
       Top = 131
-      Hint = 'T.S_Reason'
+      Hint = 'T.S_Sender'
       ParentFont = False
       Properties.MaxLength = 100
       TabOrder = 6
       Width = 403
     end
-    object EditMoney: TcxTextEdit [8]
+    object EditReason: TcxTextEdit [7]
       Left = 81
       Top = 156
+      Hint = 'T.S_Reason'
+      ParentFont = False
+      Properties.MaxLength = 100
+      TabOrder = 7
+      Width = 403
+    end
+    object EditMoney: TcxTextEdit [8]
+      Left = 81
+      Top = 181
       Hint = 'T.S_Money'
       ParentFont = False
-      TabOrder = 7
+      TabOrder = 8
       OnExit = EditMoneyExit
       Width = 100
     end
     object cxLabel1: TcxLabel [9]
       Left = 186
-      Top = 156
+      Top = 181
       AutoSize = False
       Caption = #20803
       ParentFont = False
@@ -103,26 +103,26 @@ inherited fFormShouJu: TfFormShouJu
       Transparent = True
       Height = 20
       Width = 25
-      AnchorY = 166
+      AnchorY = 191
     end
     object EditBig: TcxTextEdit [10]
       Left = 274
-      Top = 156
+      Top = 181
       Hint = 'T.S_BigMoney'
       ParentFont = False
       Properties.MaxLength = 50
-      TabOrder = 9
+      TabOrder = 10
       Width = 208
     end
     object EditMemo: TcxMemo [11]
       Left = 81
-      Top = 261
+      Top = 286
       Hint = 'T.S_Memo'
       ParentFont = False
       Properties.MaxLength = 50
       Properties.ScrollBars = ssVertical
       Style.Edges = [bBottom]
-      TabOrder = 12
+      TabOrder = 13
       Height = 46
       Width = 403
     end
@@ -141,19 +141,27 @@ inherited fFormShouJu: TfFormShouJu
     end
     object EditPayingMan: TcxTextEdit [13]
       Left = 81
-      Top = 181
+      Top = 206
       Hint = 'T.S_PayingMan'
       ParentFont = False
-      TabOrder = 10
+      TabOrder = 11
       Width = 121
     end
     object EditPriceStock: TcxMemo [14]
       Left = 81
-      Top = 206
+      Top = 231
       Hint = 'T.S_PriceStock'
-      TabOrder = 11
+      ParentFont = False
+      TabOrder = 12
       Height = 50
       Width = 408
+    end
+    object EditInOutID: TcxTextEdit [15]
+      Left = 81
+      Top = 106
+      Hint = 'T.S_InOutID'
+      TabOrder = 5
+      Width = 121
     end
     inherited dxLayout1Group_Root: TdxLayoutGroup
       inherited dxGroup1: TdxLayoutGroup
@@ -197,6 +205,11 @@ inherited fFormShouJu: TfFormShouJu
             Control = EditBank
             ControlOptions.ShowBorder = False
           end
+        end
+        object dxLayout1Item16: TdxLayoutItem
+          Caption = #22238#27454#27969#27700':'
+          Control = EditInOutID
+          ControlOptions.ShowBorder = False
         end
         object dxLayout1Item7: TdxLayoutItem
           Caption = #20857'    '#30001':'

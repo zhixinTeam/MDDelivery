@@ -206,6 +206,17 @@ inherited fFramePoundQueryGY: TfFramePoundQueryGY
     OnPopup = PMenu1Popup
     Left = 2
     Top = 262
+    object N12: TMenuItem
+      Caption = #25209#37327#35774#32622#21333#20215
+      OnClick = N12Click
+    end
+    object N13: TMenuItem
+      Caption = #25209#37327#20462#25913#21333#20215
+      OnClick = N13Click
+    end
+    object N14: TMenuItem
+      Caption = '-'
+    end
     object N3: TMenuItem
       Caption = #25171#21360#36807#30917#21333
       OnClick = N3Click

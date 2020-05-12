@@ -23,6 +23,7 @@ type
     FParamD: Variant;
     FParamE: Variant;
     FParamF: Variant;
+    FParamG: Variant;
   end;
 
   TBaseForm = class(TForm)

@@ -412,7 +412,7 @@ end;
 //Desc: 读取nCard对应的交货单
 procedure TfFrameAutoPoundItem.LoadBillItems(const nCard: string);
 var nRet: Boolean;
-    nIdx,nInt: Integer;
+    nIdx,nInt,nIntEx: Integer;
     nBills: TLadingBillItems;
     nStr,nHint, nVoice, nLabel,nPos: string;
 begin
@@ -437,8 +437,9 @@ begin
     Exit;
   end;
 
-  nHint := '';
-  nInt := 0;
+  nHint  := '';
+  nInt   := 0;
+  nIntEx := 0;
 
   for nIdx:=Low(nBills) to High(nBills) do
   with nBills[nIdx] do
@@ -448,6 +449,18 @@ begin
     begin
       if FCardUsed = sFlag_Provide then
       begin
+        nIntEx := GetTruckLastTime(nBills[nIdx].FTruck);
+        if (nIntEx > 0) and (nIntEx < FPoundTunnel.FCardInterval) then
+        begin
+          nStr := '磅站[ %s.%s ]: 车辆[ %s ]需等待 %d 秒后才能过磅';
+          nStr := Format(nStr, [FPoundTunnel.FID, FPoundTunnel.FName,
+                  nBills[nIdx].FTruck, FPoundTunnel.FCardInterval - nIntEx]);
+          WriteSysLog(nStr);
+          WriteLog(nStr);
+          SetUIData(True);
+          Exit;
+        end;
+        //指定时间内车辆禁止过磅
         if SavePurchaseOrders(sFlag_TruckIn, nBills) then
         begin
           ShowMsg('车辆进厂成功', sHint);
@@ -461,13 +474,6 @@ begin
       else
       if FCardUsed = sFlag_Sale then
       begin
-//        if not GetTruckIsQueue(FTruck) then
-//        begin
-//          nStr := '[n1]%s不能过磅,请等待';
-//          nStr := Format(nStr, [FTruck]);
-//          PlayVoice(nStr);
-//          Exit;
-//        end;
         if GetTruckIsOut(FTruck) then
         begin
           nStr := '[n1]%s已超时出队,请联系管理员处理';
@@ -596,6 +602,7 @@ begin
     nStr := Format(nStr, [FPoundTunnel.FID, FPoundTunnel.FName,
             FUIData.FTruck, FPoundTunnel.FCardInterval - nInt]);
     WriteSysLog(nStr);
+    WriteLog(nStr);
     SetUIData(True);
     Exit;
   end;
@@ -688,7 +695,7 @@ begin
       end
       else
       begin
-        if Trim(FRFIDEx) <> '' then
+        if Trim(FLastReader) = Trim(FRFIDEx) then
           OpenDoorByReader(FRFIDEx);
       end;
     end;
@@ -710,9 +717,11 @@ procedure TfFrameAutoPoundItem.Timer_ReadCardTimer(Sender: TObject);
 var nStr,nCard: string;
     nLast, nDoneTmp: Int64;
 begin
+  if FIsChkPoundStatus then Exit;
+
   if gSysParam.FIsManual then Exit;
   Timer_ReadCard.Tag := Timer_ReadCard.Tag + 1;
-  if Timer_ReadCard.Tag < 2 then Exit;
+  if Timer_ReadCard.Tag < 4 then Exit;
 
   Timer_ReadCard.Tag := 0;
   if FIsWeighting then Exit;
@@ -724,17 +733,19 @@ begin
     {$ENDIF}
     if nCard = '' then Exit;
 
+//    Timer_ReadCard.Enabled := False;
+
     if nCard <> FLastCard then
          nDoneTmp := 0
     else nDoneTmp := FLastCardDone;
     //新卡时重置
 
-    {$IFDEF DEBUG}
+//    {$IFDEF DEBUG}
     nStr := '磅站[ %s.%s ]: 读取到新卡号::: %s =>旧卡号::: %s';
     nStr := Format(nStr, [FPoundTunnel.FID, FPoundTunnel.FName,
             nCard, FLastCard]);
     WriteSysLog(nStr);
-    {$ENDIF}
+//    {$ENDIF}
 
     nLast := Trunc((GetTickCount - nDoneTmp) / 1000);
     if (nDoneTmp <> 0) and (nLast < FPoundTunnel.FCardInterval)  then
@@ -743,8 +754,11 @@ begin
       nStr := Format(nStr, [FPoundTunnel.FID, FPoundTunnel.FName,
               nCard, FPoundTunnel.FCardInterval - nLast]);
       WriteSysLog(nStr);
+      WriteLog(nStr);
       Exit;
     end;
+//    Timer_ReadCard.Enabled := False;
+
     {$IFNDEF NoCheckPound}
     if Not ChkPoundStatus then Exit;
     {$ENDIF}
@@ -1379,7 +1393,7 @@ begin
       end
       else
       begin
-        if Trim(FRFIDEx) <> '' then
+        if Trim(FLastReader) = Trim(FRFIDEx) then
           OpenDoorByReader(FRFIDEx, sFlag_No);
       end;
     end;

@@ -1,4 +1,4 @@
-inherited fFrameOrderDetailQuery: TfFrameOrderDetailQuery
+inherited fFrameOrderDetailTotal: TfFrameOrderDetailTotal
   Width = 1089
   Height = 429
   inherited ToolBar1: TToolBar
@@ -55,15 +55,17 @@ inherited fFrameOrderDetailQuery: TfFrameOrderDetailQuery
     Width = 1089
     Height = 138
     object cxtxtdt1: TcxTextEdit [0]
-      Left = 627
+      Left = 93
       Top = 93
-      Hint = 'T.O_ProName'
+      Hint = 'T.D_ProName'
       ParentFont = False
-      TabOrder = 7
-      Width = 105
+      Style.BorderColor = clWindowFrame
+      Style.BorderStyle = ebsSingle
+      TabOrder = 6
+      Width = 165
     end
     object EditDate: TcxButtonEdit [1]
-      Left = 615
+      Left = 321
       Top = 36
       ParentFont = False
       Properties.Buttons = <
@@ -73,11 +75,14 @@ inherited fFrameOrderDetailQuery: TfFrameOrderDetailQuery
         end>
       Properties.ReadOnly = True
       Properties.OnButtonClick = EditDatePropertiesButtonClick
-      TabOrder = 3
+      Style.BorderColor = clWindowFrame
+      Style.BorderStyle = ebsSingle
+      Style.ButtonStyle = btsHotFlat
+      TabOrder = 1
       Width = 185
     end
     object EditCustomer: TcxButtonEdit [2]
-      Left = 437
+      Left = 93
       Top = 36
       ParentFont = False
       Properties.Buttons = <
@@ -86,76 +91,78 @@ inherited fFrameOrderDetailQuery: TfFrameOrderDetailQuery
           Kind = bkEllipsis
         end>
       Properties.OnButtonClick = EditTruckPropertiesButtonClick
-      TabOrder = 2
-      OnKeyPress = OnCtrlKeyPress
-      Width = 115
-    end
-    object cxtxtdt2: TcxTextEdit [3]
-      Left = 449
-      Top = 93
-      Hint = 'T.D_NetWeight'
-      ParentFont = False
-      TabOrder = 6
-      Width = 115
-    end
-    object cxtxtdt3: TcxTextEdit [4]
-      Left = 81
-      Top = 93
-      Hint = 'T.D_ID'
-      ParentFont = False
-      TabOrder = 4
-      Width = 115
-    end
-    object cxtxtdt4: TcxTextEdit [5]
-      Left = 259
-      Top = 93
-      Hint = 'T.O_StockName'
-      ParentFont = False
-      TabOrder = 5
-      Width = 115
-    end
-    object EditTruck: TcxButtonEdit [6]
-      Left = 259
-      Top = 36
-      ParentFont = False
-      Properties.Buttons = <
-        item
-          Default = True
-          Kind = bkEllipsis
-        end>
-      Properties.OnButtonClick = EditTruckPropertiesButtonClick
-      TabOrder = 1
-      OnKeyPress = OnCtrlKeyPress
-      Width = 115
-    end
-    object EditBill: TcxButtonEdit [7]
-      Left = 81
-      Top = 36
-      ParentFont = False
-      Properties.Buttons = <
-        item
-          Default = True
-          Kind = bkEllipsis
-        end>
-      Properties.OnButtonClick = EditTruckPropertiesButtonClick
+      Style.BorderColor = clWindowFrame
+      Style.BorderStyle = ebsSingle
+      Style.ButtonStyle = btsHotFlat
       TabOrder = 0
       OnKeyPress = OnCtrlKeyPress
-      Width = 115
+      Width = 165
+    end
+    object cxtxtdt2: TcxTextEdit [3]
+      Left = 569
+      Top = 93
+      Hint = 'T.L_Value'
+      ParentFont = False
+      Style.BorderColor = clWindowFrame
+      Style.BorderStyle = ebsSingle
+      TabOrder = 8
+      Width = 168
+    end
+    object cxtxtdt4: TcxTextEdit [4]
+      Left = 321
+      Top = 93
+      Hint = 'T.D_StockName'
+      ParentFont = False
+      Style.BorderColor = clWindowFrame
+      Style.BorderStyle = ebsSingle
+      TabOrder = 7
+      Width = 185
+    end
+    object Radio1: TcxRadioButton [5]
+      Left = 592
+      Top = 36
+      Width = 110
+      Height = 17
+      Caption = #21516#21697#31181#21516#36710#36742
+      Checked = True
+      ParentColor = False
+      TabOrder = 3
+      TabStop = True
+      OnClick = Radio1Click
+    end
+    object Radio2: TcxRadioButton [6]
+      Left = 707
+      Top = 36
+      Width = 79
+      Height = 17
+      Caption = #21516#21697#31181
+      ParentColor = False
+      TabOrder = 4
+      OnClick = Radio2Click
+    end
+    object cxLabel1: TcxLabel [7]
+      Left = 511
+      Top = 36
+      Caption = '   '#21512#35745#26041#24335':'
+      ParentFont = False
+      Style.BorderStyle = ebsNone
+      Style.Edges = [bBottom]
+      Transparent = True
+    end
+    object Radio3: TcxRadioButton [8]
+      Left = 791
+      Top = 36
+      Width = 113
+      Height = 17
+      Caption = #21516#21697#31181#21516#36710#20027
+      ParentColor = False
+      TabOrder = 5
+      OnClick = Radio3Click
     end
     inherited dxGroup1: TdxLayoutGroup
       inherited GroupSearch1: TdxLayoutGroup
-        object dxLayout1Item7: TdxLayoutItem
-          Caption = #27966#36710#21333#21495':'
-          Control = EditBill
-          ControlOptions.ShowBorder = False
-        end
-        object dxLayout1Item4: TdxLayoutItem
-          Caption = #36710#29260#21495#30721':'
-          Control = EditTruck
-          ControlOptions.ShowBorder = False
-        end
         object dxLayout1Item8: TdxLayoutItem
-          Caption = #20379' '#24212' '#21830':'
+          Caption = #20379#24212#21830#21517#31216':'
           Control = EditCustomer
           ControlOptions.ShowBorder = False
         end
@@ -164,11 +171,32 @@ inherited fFrameOrderDetailQuery: TfFrameOrderDetailQuery
           Control = EditDate
           ControlOptions.ShowBorder = False
         end
+        object dxLayout1Item7: TdxLayoutItem
+          Control = cxLabel1
+          ControlOptions.ShowBorder = False
+        end
+        object dxLayout1Item2: TdxLayoutItem
+          Control = Radio1
+          ControlOptions.AutoColor = True
+          ControlOptions.ShowBorder = False
+        end
+        object dxLayout1Item4: TdxLayoutItem
+          Control = Radio2
+          ControlOptions.AutoColor = True
+          ControlOptions.ShowBorder = False
+        end
+        object dxLayout1Item9: TdxLayoutItem
+          Caption = 'cxRadioButton1'
+          ShowCaption = False
+          Control = Radio3
+          ControlOptions.AutoColor = True
+          ControlOptions.ShowBorder = False
+        end
       end
       inherited GroupDetail1: TdxLayoutGroup
-        object dxLayout1Item2: TdxLayoutItem
-          Caption = #27966#36710#21333#21495':'
-          Control = cxtxtdt3
+        object dxLayout1Item5: TdxLayoutItem
+          Caption = #20379#24212#21830#21517#31216':'
+          Control = cxtxtdt1
           ControlOptions.ShowBorder = False
         end
         object dxLayout1Item3: TdxLayoutItem
@@ -177,15 +205,8 @@ inherited fFrameOrderDetailQuery: TfFrameOrderDetailQuery
           ControlOptions.ShowBorder = False
         end
         object dxLayout1Item1: TdxLayoutItem
-          Caption = #20132#36135#37327'('#21544'):'
+          Caption = #25968#37327'('#21544'):'
           Control = cxtxtdt2
-          ControlOptions.ShowBorder = False
-        end
-        object dxLayout1Item5: TdxLayoutItem
-          AutoAligns = [aaVertical]
-          AlignHorz = ahClient
-          Caption = #20379' '#24212' '#21830':'
-          Control = cxtxtdt1
           ControlOptions.ShowBorder = False
         end
       end
@@ -198,7 +219,7 @@ inherited fFrameOrderDetailQuery: TfFrameOrderDetailQuery
   inherited TitlePanel1: TZnBitmapPanel
     Width = 1089
     inherited TitleBar: TcxLabel
-      Caption = #37319#36141#26126#32454#32479#35745#26597#35810
+      Caption = #21407#26448#26009#32479#35745#26597#35810
       Style.IsFontAssigned = True
       Width = 1089
       AnchorX = 545
@@ -217,50 +238,13 @@ inherited fFrameOrderDetailQuery: TfFrameOrderDetailQuery
     AutoHotkeys = maManual
     Left = 10
     Top = 280
-    object N10: TMenuItem
-      Caption = #25209#37327#35774#32622#21333#20215
-      OnClick = N10Click
-    end
-    object N11: TMenuItem
-      Caption = #25209#37327#20462#25913#21333#20215
-      OnClick = N11Click
-    end
-    object N9: TMenuItem
-      Caption = '-'
-    end
     object mniN1: TMenuItem
       Caption = #26102#38388#27573#26597#35810
       OnClick = mniN1Click
     end
     object N1: TMenuItem
-      Caption = '-'
-    end
-    object N2: TMenuItem
-      Caption = #26597#35810#26410#23436#25104
-      OnClick = N2Click
-    end
-    object N3: TMenuItem
-      Caption = #21024#38500#26410#23436#25104
-      Visible = False
-      OnClick = N3Click
-    end
-    object N4: TMenuItem
-      Caption = '-'
-    end
-    object N5: TMenuItem
-      Caption = #25209#37327#25171#21360
-      OnClick = N5Click
-    end
-    object N6: TMenuItem
-      Caption = '-'
-    end
-    object N7: TMenuItem
-      Caption = #20462#25913#36710#29260#21495#30721
-      OnClick = N7Click
-    end
-    object N8: TMenuItem
-      Caption = #20462#25913#25910#36135#22320#28857
-      OnClick = N8Click
+      Caption = #25171#21360#32467#31639#21333
+      OnClick = N1Click
     end
   end
 end

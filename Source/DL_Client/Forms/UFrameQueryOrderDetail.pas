@@ -45,6 +45,9 @@ type
     N6: TMenuItem;
     N7: TMenuItem;
     N8: TMenuItem;
+    N9: TMenuItem;
+    N10: TMenuItem;
+    N11: TMenuItem;
     procedure EditDatePropertiesButtonClick(Sender: TObject;
       AButtonIndex: Integer);
     procedure EditTruckPropertiesButtonClick(Sender: TObject;
@@ -55,6 +58,8 @@ type
     procedure N5Click(Sender: TObject);
     procedure N7Click(Sender: TObject);
     procedure N8Click(Sender: TObject);
+    procedure N10Click(Sender: TObject);
+    procedure N11Click(Sender: TObject);
   private
     { Private declarations }
   protected
@@ -103,6 +108,8 @@ begin
     N8.Visible := True;
   end;
   {$ENDIF}
+  N10.Visible := False;
+  N11.Visible := False;
 end;
 
 procedure TfFrameOrderDetailQuery.OnDestroyFrame;
@@ -121,6 +128,7 @@ begin
   Result := 'Select *,(D_MValue-D_PValue) as D_NetWeight, ' +
             '(D_MValue-D_PValue-isnull(D_KZValue,0)) as D_NetWeightEx,'+
             '(D_MValue-isnull(D_KZValue,0)) as D_MValueEx,'+
+            '( select T_Owner from S_Truck where T_Truck = D_Truck ) as T_Owner,' +
             ' '''+EditDate.Text+''' as P_BetweenTime From $OD od Inner Join $OO oo on od.D_OID=oo.O_ID ';
   //xxxxxx
 
@@ -326,6 +334,108 @@ begin
 
     InitFormData(FWhere);
     ShowMsg('收货地点修改成功', sHint);
+  end;
+end;
+
+procedure TfFrameOrderDetailQuery.N10Click(Sender: TObject);
+var nStr, nSql, nDIDs, nPrice : string;
+    nIdx: Integer;
+    nList: TStrings;
+begin
+  if cxView1.DataController.GetSelectedCount < 1 then
+  begin
+    ShowMsg('请选择要设置的记录', sHint); Exit;
+  end;
+
+  nList := TStringList.Create;
+  try
+    with cxView1.Controller do
+    begin
+      for nIdx:=0 to SelectedRowCount-1   do
+      begin
+        SelectedRows[nIdx].Focused:=True;
+        nStr := SQLQuery.FieldByName('D_ID').AsString;
+        if nStr = '' then
+          Continue;
+
+        nList.Add(nStr);
+      end;
+    end;
+
+    nDIDs := AdjustListStrFormat2(nList, '''', True, ',', False);
+
+    nSql := ' Select * From %s od Where D_ID In (%s) and isnull(D_YNPrice,''N'') = ''Y'' ';
+    nSql := Format(nSql, [sTable_OrderDtl, nDIDs]);
+    with FDM.QueryTemp(nSql) do
+    if RecordCount > 0 then
+    begin
+      ShowMsg('存在已设置单价的记录,请过滤后再设置', sHint);
+      Exit;
+    end;
+
+    nPrice := '0';
+    if not ShowInputBox('请输入单价:', '修改', nPrice, 100) then Exit;
+
+    if StrToCurrDef(nPrice,0) <= 0 then Exit;
+
+    nStr := 'Update %s Set D_Price=''%s'', D_YNPrice=''Y'' Where D_ID In (%s) ';
+    nStr := Format(nStr, [sTable_OrderDtl, nPrice, nDIDs]);
+    FDM.ExecuteSQL(nStr);
+    
+    nStr := '采购单设置价格[%s].';
+    nStr := Format(nStr, [nPrice]);
+    FDM.WriteSysLog(sFlag_BillItem, gSysParam.FUserName, nStr, False);
+
+    InitFormData(FWhere);
+    ShowMsg('设置单价成功！', sHint);
+  finally
+    nList.Free;
+  end;
+end;
+
+procedure TfFrameOrderDetailQuery.N11Click(Sender: TObject);
+var nStr, nSql, nDIDs, nPrice : string;
+    nIdx: Integer;
+    nList: TStrings;
+begin
+  if cxView1.DataController.GetSelectedCount < 1 then
+  begin
+    ShowMsg('请选择要修改的记录', sHint); Exit;
+  end;
+
+  nList := TStringList.Create;
+  try
+    with cxView1.Controller do
+    begin
+      for nIdx:=0 to SelectedRowCount-1   do
+      begin
+        SelectedRows[nIdx].Focused:=True;
+        nStr := SQLQuery.FieldByName('D_ID').AsString;
+        if nStr = '' then
+          Continue;
+
+        nList.Add(nStr);
+      end;
+    end;
+    nDIDs := AdjustListStrFormat2(nList, '''', True, ',', False);
+
+    nPrice :=  SQLQuery.FieldByName('D_Price').AsString;
+    if not ShowInputBox('请输入单价:', '修改', nPrice, 100) then Exit;
+
+    if StrToCurrDef(nPrice,0) <= 0 then Exit;
+
+    nStr := 'Update %s Set D_Price=''%s'', D_YNPrice=''Y'' Where D_ID In (%s) ';
+    nStr := Format(nStr, [sTable_OrderDtl, nPrice, nDIDs]);
+    FDM.ExecuteSQL(nStr);
+    
+    nStr := '采购单设置价格[%s].';
+    nStr := Format(nStr, [nPrice]);
+    FDM.WriteSysLog(sFlag_BillItem, gSysParam.FUserName, nStr, False);
+
+    InitFormData(FWhere);
+    ShowMsg('修改单价成功！', sHint);
+  finally
+    nList.Free;
   end;
 end;
 

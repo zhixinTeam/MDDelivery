@@ -550,7 +550,12 @@ var nIdx: Integer;
     nStatus, nNextStatus: string;
     {$ENDIF}
     nOut, nTmp: TWorkerBusinessCommand;
-    nLine:string;
+    nLine, nLID :string;
+
+  function GetLeftStr(SubStr, Str: string): string;
+  begin
+    Result := Copy(Str, 1, Pos(SubStr, Str) - 1);
+  end;
 begin
   Result := False;
   FListA.Text := PackerDecodeStr(FIn.FData);
@@ -828,6 +833,25 @@ begin
 
         if nStr <> '' then
         begin
+          //查找拼单的提货单号
+          nSQL := ' Select T_HKBills from %s Where R_ID = ''%s'' ';
+          nSQL := Format(nSQL,[sTable_ZTTrucks, nStr]);
+          with gDBConnManager.WorkerQuery(FDBConn,nSQL) do
+          begin
+            if recordCount > 0 then
+              nLID := GetLeftStr('.',Trim(FieldByName('T_HKBills').AsString));
+          end;
+          //更新拼单L_HdOrderID
+          nSQL := ' Update $BL Set L_HdOrderID = ''$HD'' Where L_ID = ''$RD'' ';
+          nSQL := MacroValue(nSQL, [MI('$BL', sTable_Bill),
+                  MI('$HD', nLID),MI('$RD', nLID)]);
+          gDBConnManager.WorkerExec(FDBConn, nSQL);
+          //更新待拼单L_HdOrderID
+          nSQL := ' Update $BL Set L_HdOrderID = ''$HD'' Where L_ID = ''$RD'' ';
+          nSQL := MacroValue(nSQL, [MI('$BL', sTable_Bill),
+                  MI('$HD', nLID),MI('$RD', nOut.FData)]);
+          gDBConnManager.WorkerExec(FDBConn, nSQL);
+        
           nSQL := 'Update $TK Set T_Value=T_Value + $Val,' +
                   'T_HKBills=T_HKBills+''$BL.'' Where R_ID=$RD';
           nSQL := MacroValue(nSQL, [MI('$TK', sTable_ZTTrucks),
@@ -951,16 +975,16 @@ begin
       //freeze money from account
     end;
 
-    if nFixMoney = sFlag_Yes then
-    begin
-      nStr := 'Update %s Set Z_FixedMoney=Z_FixedMoney-%s Where Z_ID=''%s''';
-      nStr := Format(nStr, [sTable_ZhiKa, FloatToStr(nVal),
-              FListA.Values['ZhiKa']]);
-      //xxxxx
-
-      gDBConnManager.WorkerExec(FDBConn, nStr);
-      //freeze money from zhika
-    end;
+//    if nFixMoney = sFlag_Yes then
+//    begin
+//      nStr := 'Update %s Set Z_FixedMoney=Z_FixedMoney-%s Where Z_ID=''%s''';
+//      nStr := Format(nStr, [sTable_ZhiKa, FloatToStr(nVal),
+//              FListA.Values['ZhiKa']]);
+//      //xxxxx
+//
+//      gDBConnManager.WorkerExec(FDBConn, nStr);
+//      //freeze money from zhika
+//    end;
 
     nIdx := Length(FOut.FData);
     if Copy(FOut.FData, nIdx, 1) = ',' then
@@ -1225,14 +1249,14 @@ begin
     nStr := Format(nStr, [sTable_CusAccount, nMon, FListB.Values['CusID']]);
     FListC.Add(nStr); //还原提货方出金
 
-    if FListB.Values['ZKMoney'] = sFlag_Yes then
-    begin
-      nStr := 'Update %s Set Z_FixedMoney=Z_FixedMoney+(%.2f) ' +
-              'Where Z_ID=''%s'' And Z_OnlyMoney=''%s''';
-      nStr := Format(nStr, [sTable_ZhiKa, nMon,
-              FListB.Values['ZhiKa'], sFlag_Yes]);
-      FListC.Add(nStr); //还原提货方限提金额
-    end;
+//    if FListB.Values['ZKMoney'] = sFlag_Yes then
+//    begin
+//      nStr := 'Update %s Set Z_FixedMoney=Z_FixedMoney+(%.2f) ' +
+//              'Where Z_ID=''%s'' And Z_OnlyMoney=''%s''';
+//      nStr := Format(nStr, [sTable_ZhiKa, nMon,
+//              FListB.Values['ZhiKa'], sFlag_Yes]);
+//      FListC.Add(nStr); //还原提货方限提金额
+//    end;
 
     nMon := nVal * FieldByName('D_Price').AsFloat;
     nMon := Float2Float(nMon, cPrecision, True);
@@ -1261,12 +1285,12 @@ begin
     nStr := Format(nStr, [sTable_CusAccount, nMon, FListA.Values['CusID']]);
     FListC.Add(nStr); //增加调拨方出金
 
-    if FListA.Values['ZKMoney'] = sFlag_Yes then
-    begin
-      nStr := 'Update %s Set Z_FixedMoney=Z_FixedMoney+(%.2f) Where Z_ID=''%s''';
-      nStr := Format(nStr, [sTable_ZhiKa, nMon, FIn.FExtParam]);
-      FListC.Add(nStr); //扣减调拨方限提金额
-    end;
+//    if FListA.Values['ZKMoney'] = sFlag_Yes then
+//    begin
+//      nStr := 'Update %s Set Z_FixedMoney=Z_FixedMoney+(%.2f) Where Z_ID=''%s''';
+//      nStr := Format(nStr, [sTable_ZhiKa, nMon, FIn.FExtParam]);
+//      FListC.Add(nStr); //扣减调拨方限提金额
+//    end;
 
     nStr := MakeSQLByStr([SF('L_ZhiKa', FIn.FExtParam),
             SF('L_Project', FListA.Values['Project']),
@@ -1412,13 +1436,13 @@ begin
       //释放冻结金
     end;
 
-    if nFix = sFlag_Yes then
-    begin
-      nStr := 'Update %s Set Z_FixedMoney=Z_FixedMoney+(%.2f) Where Z_ID=''%s''';
-      nStr := Format(nStr, [sTable_ZhiKa, nMoney, nZK]);
-      gDBConnManager.WorkerExec(FDBConn, nStr);
-      //释放限提金额
-    end;
+//    if nFix = sFlag_Yes then
+//    begin
+//      nStr := 'Update %s Set Z_FixedMoney=Z_FixedMoney+(%.2f) Where Z_ID=''%s''';
+//      nStr := Format(nStr, [sTable_ZhiKa, nMoney, nZK]);
+//      gDBConnManager.WorkerExec(FDBConn, nStr);
+//      //释放限提金额
+//    end;
 
     nStr := 'Update %s Set B_HasUse=B_HasUse-%.2f Where B_Batcode=''%s''';
     nStr := Format(nStr, [sTable_StockBatcode, nVal, nHY]);
@@ -2418,13 +2442,13 @@ begin
                   ], sTable_Bill, SF('L_ID', FID), False);
           FListA.Add(nSQL); //更新提货量
 
-          if nOut.FExtParam = sFlag_Yes then
-          begin
-            nSQL := 'Update %s Set Z_FixedMoney=Z_FixedMoney-(%.2f) ' +
-                    'Where Z_ID=''%s''';
-            nSQL := Format(nSQL, [sTable_ZhiKa, m, FZhiKa]);
-            FListA.Add(nSQL); //更新纸卡限提金额
-          end;
+//          if nOut.FExtParam = sFlag_Yes then
+//          begin
+//            nSQL := 'Update %s Set Z_FixedMoney=Z_FixedMoney-(%.2f) ' +
+//                    'Where Z_ID=''%s''';
+//            nSQL := Format(nSQL, [sTable_ZhiKa, m, FZhiKa]);
+//            FListA.Add(nSQL); //更新纸卡限提金额
+//          end;
 
           nSQL := 'Select L_HYDan From %s Where L_ID=''%s''';
           nSQL := Format(nSQL, [sTable_Bill, FID]);
@@ -2450,15 +2474,15 @@ begin
         end;
         nFixMoney := nOut.FExtParam;
 
-        if nFixMoney = sFlag_Yes then
-        begin
-          nSQL := 'Update %s Set Z_FixedMoney=Z_FixedMoney-%s Where Z_ID=''%s''';
-          nSQL := Format(nSQL, [sTable_ZhiKa, FloatToStr(nVal),
-                  nBills[0].FZhiKa]);
-          //xxxxx
-
-          FListA.Add(nSQL);
-        end;
+//        if nFixMoney = sFlag_Yes then
+//        begin
+//          nSQL := 'Update %s Set Z_FixedMoney=Z_FixedMoney-%s Where Z_ID=''%s''';
+//          nSQL := Format(nSQL, [sTable_ZhiKa, FloatToStr(nVal),
+//                  nBills[0].FZhiKa]);
+//          //xxxxx
+//
+//          FListA.Add(nSQL);
+//        end;
         //释放限提金额
 
         nVal := Float2Float(FPrice * FValue, cPrecision, False);

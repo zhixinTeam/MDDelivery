@@ -48,6 +48,9 @@ type
     N9: TMenuItem;
     N10: TMenuItem;
     N11: TMenuItem;
+    N12: TMenuItem;
+    N13: TMenuItem;
+    N14: TMenuItem;
     procedure EditDatePropertiesButtonClick(Sender: TObject;
       AButtonIndex: Integer);
     procedure EditTruckPropertiesButtonClick(Sender: TObject;
@@ -62,6 +65,8 @@ type
     procedure cxView1DblClick(Sender: TObject);
     procedure N10Click(Sender: TObject);
     procedure N11Click(Sender: TObject);
+    procedure N12Click(Sender: TObject);
+    procedure N13Click(Sender: TObject);
   private
     { Private declarations }
   protected
@@ -87,7 +92,7 @@ implementation
 {$R *.dfm}
 uses
   ShellAPI, ULibFun, UMgrControl, UDataModule, USysBusiness, UFormDateFilter,
-  UFormBase, UFormWait, USysConst, USysDB;
+  UFormBase, UFormWait, USysConst, USysDB, UFormInputbox;
 
 class function TfFramePoundQueryGY.FrameID: integer;
 begin
@@ -103,6 +108,10 @@ begin
   FJBWhere := '';
   InitDateRange(Name, FStart, FEnd);
   cxView1.OptionsSelection.MultiSelect := True;
+  if gSysParam.FIsAdmin then
+    N13.Enabled := True
+  else
+    N13.Enabled := False;
 end;
 
 procedure TfFramePoundQueryGY.OnDestroyFrame;
@@ -132,13 +141,14 @@ begin
 
   EditDate.Text := Format('%s 至 %s', [Date2Str(FStart), Date2Str(FEnd)]);
 
-  Result := ' Select pl.*,(P_MValue-P_PValue-isnull(P_KZValue,0)) As P_NetWeight,' +
+  Result := ' Select pl.*,od.*,(P_MValue-P_PValue-isnull(P_KZValue,0)) As P_NetWeight,' +
             ' (P_MValue-P_PValue-isnull(P_KZValue,0)-P_OldValue) as P_FZValue,'+
             ' (P_MValue - isnull(P_KZValue,0)) As P_MValueEx, ' +
+            '( select T_Owner from S_Truck where T_Truck = P_Truck ) as T_Owner,' +
             ' ABS((P_MValue-P_PValue)-P_LimValue) As P_Wucha '+
-            ' From $PL pl';
+            ' From $PL pl ' +
+            ' Left Join $OD od On (od.D_ID=pl.P_Order)';
   //xxxxx
-
   if FJBWhere = '' then
   begin
 //    Result := Result + ' Where  ' +
@@ -151,8 +161,14 @@ begin
   end;
 
   if CheckDelete.Checked then
-       Result := MacroValue(Result, [MI('$PL', sTable_PoundBak)])
-  else Result := MacroValue(Result, [MI('$PL', sTable_PoundLog)]);
+       Result := MacroValue(Result,
+       [MI('$PL', sTable_PoundBak),
+        MI('$OD', sTable_OrderDtl)
+       ])
+  else Result := MacroValue(Result,
+       [MI('$PL', sTable_PoundLog),
+        MI('$OD', sTable_OrderDtl)       
+       ]);
 
   Result := MacroValue(Result, [MI('$S', Date2Str(FStart)),
             MI('$E', Date2Str(FEnd+1))]);
@@ -524,6 +540,120 @@ begin
 
       FDM.ExecuteSQL(nStr);
     end;
+  end;
+end;
+
+//批量设置单价
+procedure TfFramePoundQueryGY.N12Click(Sender: TObject);
+var nStr, nSql, nDIDs, nPrice : string;
+    nIdx: Integer;
+    nList: TStrings;
+begin
+  if cxView1.DataController.GetSelectedCount < 1 then
+  begin
+    ShowMsg('请选择要设置的记录', sHint); Exit;
+  end;
+
+  nList := TStringList.Create;
+  try
+    with cxView1.Controller do
+    begin
+      for nIdx:=0 to SelectedRowCount-1   do
+      begin
+        SelectedRows[nIdx].Focused:=True;
+        nStr := SQLQuery.FieldByName('D_ID').AsString;
+        if nStr = '' then
+          Continue;
+
+        nList.Add(nStr);
+      end;
+    end;
+
+    nDIDs := AdjustListStrFormat2(nList, '''', True, ',', False);
+    if Trim(nDIDs) = '' then
+    begin
+      ShowMsg('请选择要设置对应的记录', sHint);
+      Exit;    
+    end;
+
+    nSql := ' Select * From %s od Where D_ID In (%s) and isnull(D_YNPrice,''N'') = ''Y'' ';
+    nSql := Format(nSql, [sTable_OrderDtl, nDIDs]);
+    with FDM.QueryTemp(nSql) do
+    if RecordCount > 0 then
+    begin
+      ShowMsg('存在已设置单价的记录,请过滤后再设置', sHint);
+      Exit;
+    end;
+
+    nPrice := '0';
+    if not ShowInputBox('请输入单价:', '修改', nPrice, 100) then Exit;
+
+    if StrToCurrDef(nPrice,0) <= 0 then Exit;
+
+    nStr := 'Update %s Set D_Price=''%s'', D_YNPrice=''Y'' Where D_ID In (%s) ';
+    nStr := Format(nStr, [sTable_OrderDtl, nPrice, nDIDs]);
+    FDM.ExecuteSQL(nStr);
+    
+    nStr := '采购单设置价格[%s].';
+    nStr := Format(nStr, [nPrice]);
+    FDM.WriteSysLog(sFlag_BillItem, gSysParam.FUserName, nStr, False);
+
+    InitFormData(FWhere);
+    ShowMsg('设置单价成功！', sHint);
+  finally
+    nList.Free;
+  end;
+end;
+
+//批量修改单价
+procedure TfFramePoundQueryGY.N13Click(Sender: TObject);
+var nStr, nSql, nDIDs, nPrice : string;
+    nIdx: Integer;
+    nList: TStrings;
+begin
+  if cxView1.DataController.GetSelectedCount < 1 then
+  begin
+    ShowMsg('请选择要修改的记录', sHint); Exit;
+  end;
+
+  nList := TStringList.Create;
+  try
+    with cxView1.Controller do
+    begin
+      for nIdx:=0 to SelectedRowCount-1   do
+      begin
+        SelectedRows[nIdx].Focused:=True;
+        nStr := SQLQuery.FieldByName('D_ID').AsString;
+        if nStr = '' then
+          Continue;
+
+        nList.Add(nStr);
+      end;
+    end;
+    nDIDs := AdjustListStrFormat2(nList, '''', True, ',', False);
+    if Trim(nDIDs) = '' then
+    begin
+      ShowMsg('请选择要修改对应的记录', sHint);
+      Exit;    
+    end;
+
+    nPrice :=  SQLQuery.FieldByName('D_Price').AsString;
+    if not ShowInputBox('请输入单价:', '修改', nPrice, 100) then Exit;
+
+    if StrToCurrDef(nPrice,0) <= 0 then Exit;
+
+    nStr := ' Update %s Set D_Price=''%s'', D_YNPrice=''Y'' Where D_ID In (%s) ';
+    nStr := Format(nStr, [sTable_OrderDtl, nPrice, nDIDs]);
+    FDM.ExecuteSQL(nStr);
+    
+    nStr := '采购单设置价格[%s].';
+    nStr := Format(nStr, [nPrice]);
+    FDM.WriteSysLog(sFlag_BillItem, gSysParam.FUserName, nStr, False);
+
+    InitFormData(FWhere);
+    ShowMsg('修改单价成功！', sHint);
+  finally
+    nList.Free;
   end;
 end;
 

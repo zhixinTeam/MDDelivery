@@ -1261,7 +1261,8 @@ begin
           if recordcount > 0 then
           begin
             if FieldByName('d_status').AsString = sFlag_TruckOut then
-              nNetWeight := FieldByName('D_MValue').asFloat - FieldByName('D_PValue').asFloat;
+              nNetWeight := 0;
+//              nNetWeight := FieldByName('D_MValue').asFloat - FieldByName('D_PValue').asFloat;
           end;
         end;
 

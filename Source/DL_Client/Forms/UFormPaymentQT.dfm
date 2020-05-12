@@ -1,4 +1,4 @@
-inherited fFormPayment: TfFormPayment
+inherited fFormPaymentQT: TfFormPaymentQT
   Left = 460
   Top = 110
   ClientHeight = 581

@@ -1118,6 +1118,10 @@ begin
     begin
       Result := True;
     end
+    else if Fields[0].AsString = '0' then
+    begin
+      nHint := '订单尚未预约成功,请等待!';
+    end
     else
     begin
       nHint := '订单已失效!';

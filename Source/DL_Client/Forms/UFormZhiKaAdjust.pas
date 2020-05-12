@@ -233,11 +233,11 @@ begin
   
   if Radio2.Checked then
   begin
-    nStr := 'Update $ZK Set Z_FixedMoney=$Money,Z_OnlyMoney=''$Yes'' ' +
-            'Where Z_ID=''$ID''';
-    nStr := MacroValue(nStr, [MI('$ZK', sTable_ZhiKa), MI('$Yes', sFlag_Yes),
-            MI('$ID', gZKItems[ListZK.ItemIndex].FZhiKa)]);
-    gInfo.FSQLRes := nStr;
+//    nStr := 'Update $ZK Set Z_FixedMoney=$Money,Z_OnlyMoney=''$Yes'' ' +
+//            'Where Z_ID=''$ID''';
+//    nStr := MacroValue(nStr, [MI('$ZK', sTable_ZhiKa), MI('$Yes', sFlag_Yes),
+//            MI('$ID', gZKItems[ListZK.ItemIndex].FZhiKa)]);
+//    gInfo.FSQLRes := nStr;
   end else
 
   if Radio3.Checked then

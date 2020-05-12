@@ -82,7 +82,7 @@ begin
   
   Result := 'Select iom.*,sm.S_Name From $IOM iom ' +
             ' Left Join $SM sm On sm.S_ID=iom.M_SaleMan ' +
-            'Where M_Type=''$HK'' And isnull(M_RuZhang,''Y'') <> ''Y'' ';
+            'Where M_Type=''$HK'' And isnull(M_RuZhang,''Y'') <> ''Y'' And M_Payment not like ''%%Ç·Ìב%%'' ';
             
   if nWhere = '' then
        Result := Result + 'And (M_Date>=''$Start'' And M_Date <''$End'')'

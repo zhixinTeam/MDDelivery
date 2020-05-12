@@ -47,6 +47,8 @@ type
     dxLayout1Item14: TdxLayoutItem;
     EditPriceStock: TcxMemo;
     dxLayout1Item15: TdxLayoutItem;
+    EditInOutID: TcxTextEdit;
+    dxLayout1Item16: TdxLayoutItem;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure EditMoneyExit(Sender: TObject);
@@ -107,6 +109,8 @@ begin
       EditMemo.Text      := nP.FParamE;
       EditMoney.Text     := nP.FParamC;
       EditPriceStock.Text:= nP.FParamF;
+      EditInoutID.Text   := nP.FParamG;
+      EditInoutID.Properties.ReadOnly := True;
       EditMoneyExit(nil);
 
       InitFormData('');

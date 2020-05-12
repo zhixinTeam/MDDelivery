@@ -124,6 +124,7 @@ begin
       FNum3 := FieldByName('P_Num3').AsFloat;
     end;
   end;
+  cxView1.OptionsSelection.MultiSelect := True;
 end;
 
 procedure TfFramePoundQueryKS.OnDestroyFrame;
