@@ -130,8 +130,9 @@ begin
   begin
     Result := 'Select D_ProID, D_ProName, D_StockNo, D_StockName, D_Truck, D_Price, ' +
               '( select Top 1 T_Owner from S_Truck where T_Truck = D_Truck ) as T_Owner,' +
-              'CAST(Sum(D_Value) as decimal(38, 2)) as D_Value,' +
-              'CAST(Sum(D_Value * D_Price) as decimal(38, 2)) as D_Money, Count(*) as D_Num, ' +
+              'CAST(Sum(P_MValue-P_PValue-isnull(P_KZValue,0)) as decimal(38, 2)) as D_Value,' +
+              'CAST(Sum(((P_MValue-P_PValue-isnull(P_KZValue,0)) * D_Price)+((P_MValue-P_PValue-isnull(P_KZValue,0)-isnull(P_OldValue,P_MValue-P_PValue-isnull(P_KZValue,0)))*isnull(D_KCPrice,0))) as decimal(38, 2)) as D_Money,'+
+              ' Count(*) as D_Num, ' +
               'CAST(Sum((P_MValue-P_PValue-isnull(P_KZValue,0)-isnull(P_OldValue,P_MValue-P_PValue-isnull(P_KZValue,0)))) as decimal(38, 2)) as D_KCD,'+
               'D_KD '+
               'From $OD od Inner Join $PL pl on (od.D_ID = pl.P_Order and isnull(pl.P_TwoState,''N'') = ''Y'') ';
@@ -140,8 +141,9 @@ begin
   else if Radio2.Checked then
   begin
     Result := 'Select D_ProID,D_ProName, D_StockNo, D_StockName,D_Price, ' +
-              'CAST(Sum(D_Value) as decimal(38, 2)) as D_Value,' +
-              'CAST(Sum(D_Value * D_Price) as decimal(38, 2)) as D_Money,'''' D_Truck,'''' T_Owner, Count(*) as D_Num, ' +
+              'CAST(Sum(P_MValue-P_PValue-isnull(P_KZValue,0)) as decimal(38, 2)) as D_Value,' +
+              'CAST(Sum(((P_MValue-P_PValue-isnull(P_KZValue,0)) * D_Price)+((P_MValue-P_PValue-isnull(P_KZValue,0)-isnull(P_OldValue,P_MValue-P_PValue-isnull(P_KZValue,0)))*isnull(D_KCPrice,0))) as decimal(38, 2)) as D_Money,'+
+              ' '''' D_Truck,'''' T_Owner, Count(*) as D_Num, ' +
               'CAST(Sum((P_MValue-P_PValue-isnull(P_KZValue,0)-isnull(P_OldValue,P_MValue-P_PValue-isnull(P_KZValue,0)))) as decimal(38, 2)) as D_KCD,'+
               'D_KD '+
               'From $OD od Inner Join $PL pl on (od.D_ID = pl.P_Order and isnull(pl.P_TwoState,''N'') = ''Y'') ';
@@ -150,8 +152,9 @@ begin
   else if Radio3.Checked then
   begin
     Result := 'Select D_ProID,D_ProName, D_StockNo, D_StockName,D_Price, ' +
-              'CAST(Sum(D_Value) as decimal(38, 2)) as D_Value,' +
-              'CAST(Sum(D_Value * D_Price) as decimal(38, 2)) as D_Money,IsNull(T_Owner,D_Truck) T_Own, Count(*) as D_Num, ' +
+              'CAST(Sum(P_MValue-P_PValue-isnull(P_KZValue,0)) as decimal(38, 2)) as D_Value,' +
+              'CAST(Sum(((P_MValue-P_PValue-isnull(P_KZValue,0)) * D_Price)+((P_MValue-P_PValue-isnull(P_KZValue,0)-isnull(P_OldValue,P_MValue-P_PValue-isnull(P_KZValue,0)))*isnull(D_KCPrice,0))) as decimal(38, 2)) as D_Money,'+
+              ' IsNull(T_Owner,D_Truck) T_Own, Count(*) as D_Num, ' +
               'CAST(Sum((P_MValue-P_PValue-isnull(P_KZValue,0)-isnull(P_OldValue,P_MValue-P_PValue-isnull(P_KZValue,0)))) as decimal(38, 2)) as D_KCD,'+
               'D_KD '+
               'From $OD od Inner Join $PL pl on (od.D_ID = pl.P_Order and isnull(pl.P_TwoState,''N'') = ''Y'') '+

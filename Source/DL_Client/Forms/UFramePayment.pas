@@ -193,7 +193,7 @@ end;
 procedure TfFramePayment.N3Click(Sender: TObject);
 var
   nStr, nRID, nSql,nPayingUnit,nMoney : string;
-  nPayingMan,nDesc,nPriceStock,nType,nAcceptNum : string;
+  nPayingMan,nDesc,nPriceStock,nType,nAcceptNum,nDate,nMan : string;
   nP: TFormCommandParam;
 begin
   if cxView1.DataController.GetSelectedCount > 0 then
@@ -206,7 +206,9 @@ begin
     nPriceStock := SQLQuery.FieldByName('M_PriceStock').AsString;
     nType       := SQLQuery.FieldByName('M_Payment').AsString;
     nAcceptNum  := SQLQuery.FieldByName('M_AcceptNum').AsString;
-    
+    nDate       := FormatDateTime('YYYY-MM-DD HH:MM:SS',SQLQuery.FieldByName('M_Date').AsDateTime) ;
+    nMan        := SQLQuery.FieldByName('M_Man').AsString;
+
     //判断是否已生成收据
     nSql := ' Select Count(*) From %s Where S_InOutID = ''%s'' ';
     nSql := Format(nSql, [sTable_SysShouJu, nRID]);
@@ -229,6 +231,8 @@ begin
     nP.FParamE  := nDesc;
     nP.FParamF  := nPriceStock;
     nP.FParamG  := nRID;
+    nP.FParamH  := nDate;
+    nP.FParamI  := nMan;
     CreateBaseFormItem(cFI_FormShouJu, '', @nP);
   end;
 end;

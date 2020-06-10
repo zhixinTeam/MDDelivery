@@ -36,6 +36,9 @@ type
     N2: TMenuItem;
     N3: TMenuItem;
     N4: TMenuItem;
+    N5: TMenuItem;
+    N6: TMenuItem;
+    N7: TMenuItem;
     procedure EditIDPropertiesButtonClick(Sender: TObject;
       AButtonIndex: Integer);
     procedure BtnAddClick(Sender: TObject);
@@ -46,6 +49,8 @@ type
     procedure N2Click(Sender: TObject);
     procedure PMenu1Popup(Sender: TObject);
     procedure N4Click(Sender: TObject);
+    procedure N5Click(Sender: TObject);
+    procedure N6Click(Sender: TObject);
   private
     { Private declarations }
   protected
@@ -234,6 +239,56 @@ begin
   finally
     CloseWaitForm;
   end; 
+end;
+
+procedure TfFrameSalesMan.N5Click(Sender: TObject);
+var nStr, nSQL, nID: string;
+begin
+  if cxView1.DataController.GetSelectedCount < 1 then
+  begin
+    ShowMsg('请选择记录', sHint); Exit;
+  end;
+
+  nID := SQLQuery.FieldByName('S_ID').AsString;
+
+  FDM.ADOConn.BeginTrans;
+  try
+    nSQL := ' Update %s Set S_YNOrder = ''Y'' Where S_ID=''%s''';
+    nSQL := Format(nSQL, [sTable_Salesman, nID]);
+    FDM.ExecuteSQL(nSQL);
+    
+    FDM.ADOConn.CommitTrans;
+    InitFormData(FWhere);
+    ShowMsg('业务员允许开单成功', sHint);
+  except
+    FDM.ADOConn.RollbackTrans;
+    ShowMsg('业务员允许开单失败', '未知错误');
+  end;
+end;
+
+procedure TfFrameSalesMan.N6Click(Sender: TObject);
+var nStr, nSQL, nID: string;
+begin
+  if cxView1.DataController.GetSelectedCount < 1 then
+  begin
+    ShowMsg('请选择记录', sHint); Exit;
+  end;
+
+  nID := SQLQuery.FieldByName('S_ID').AsString;
+
+  FDM.ADOConn.BeginTrans;
+  try
+    nSQL := ' Update %s Set S_YNOrder = ''N'' Where S_ID=''%s''';
+    nSQL := Format(nSQL, [sTable_Salesman, nID]);
+    FDM.ExecuteSQL(nSQL);
+    
+    FDM.ADOConn.CommitTrans;
+    InitFormData(FWhere);
+    ShowMsg('业务员不允许开单成功', sHint);
+  except
+    FDM.ADOConn.RollbackTrans;
+    ShowMsg('业务员不允许开单失败', '未知错误');
+  end;
 end;
 
 initialization

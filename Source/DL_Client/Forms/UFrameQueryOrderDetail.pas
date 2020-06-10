@@ -128,7 +128,7 @@ begin
   Result := 'Select *,(D_MValue-D_PValue) as D_NetWeight, ' +
             '(D_MValue-D_PValue-isnull(D_KZValue,0)) as D_NetWeightEx,'+
             '(D_MValue-isnull(D_KZValue,0)) as D_MValueEx,'+
-            '( select T_Owner from S_Truck where T_Truck = D_Truck ) as T_Owner,' +
+            '( select Top 1 T_Owner from S_Truck where T_Truck = D_Truck ) as T_Owner,' +
             ' '''+EditDate.Text+''' as P_BetweenTime From $OD od Inner Join $OO oo on od.D_OID=oo.O_ID ';
   //xxxxxx
 

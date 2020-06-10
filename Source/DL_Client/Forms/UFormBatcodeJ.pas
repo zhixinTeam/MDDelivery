@@ -289,7 +289,7 @@ end;
 
 //Desc: 保存
 procedure TfFormBatcode.BtnOKClick(Sender: TObject);
-var nStr,nU,nN,nY: string;
+var nStr,nU,nN,nY,nSQL,nFirstDate: string;
 begin
   if not IsDataValid then Exit;
   //验证不通过
@@ -312,6 +312,13 @@ begin
 
   if (FRecordID <> '') and (Trim(EditBatCode.Text) <> FOld_Batcode) then
   begin
+    nSQL := ' Select B_FirstDate from %s where R_ID = ''%s'' ';
+    nSQL := Format(nSQL, [sTable_StockBatcode, FRecordID]);
+    with FDM.QueryTemp(nSQL) do
+    if RecordCount > 0 then
+    begin
+      nFirstDate := Fields[0].AsString;
+    end;
     nStr := MakeSQLByStr([SF('B_Stock', GetCtrlData(EditStock)),
           SF('B_Name', EditName.Text),
           SF('B_Prefix', EditPrefix.Text),
@@ -331,6 +338,8 @@ begin
           {$IFDEF CustomerType}
           SF('B_Type', GetCtrlData(EditType)),
           {$ENDIF}
+          SF('B_PreDate', nFirstDate),
+          SF('B_FirstDate', sField_SQLServer_Now, sfVal),
           SF('B_LastDate', sField_SQLServer_Now, sfVal)
           ], sTable_StockBatcode, nStr, False);
   end

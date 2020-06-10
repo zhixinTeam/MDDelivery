@@ -193,6 +193,10 @@ inherited fFrameHYData: TfFrameHYData
       Caption = #25171#21360#21270#39564#21333
       OnClick = N1Click
     end
+    object N4: TMenuItem
+      Caption = #25209#37327#25171#21360#21270#39564#21333
+      OnClick = N4Click
+    end
     object N3: TMenuItem
       Caption = '-'
     end

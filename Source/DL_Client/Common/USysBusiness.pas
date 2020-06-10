@@ -300,7 +300,7 @@ function PrintPoundReport(const nPound: string; nAsk: Boolean;
 function PrintPoundReportKS(const nPound: string; nAsk: Boolean;
                           const nMul: Boolean = False): Boolean;
 //打印矿山榜单
-function PrintHuaYanReport(const nHID: string; const nAsk: Boolean): Boolean;
+function PrintHuaYanReport(nHID: string; const nAsk: Boolean): Boolean;
 function PrintHeGeReport(const nHID: string; const nAsk: Boolean): Boolean;
 //化验单,合格证
 function PrintBillFYDReport(const nBill: string;  const nAsk: Boolean): Boolean;
@@ -3165,7 +3165,7 @@ begin
 end;
 
 //Desc: 打印标识为nHID的化验单
-function PrintHuaYanReport(const nHID: string; const nAsk: Boolean): Boolean;
+function PrintHuaYanReport(nHID: string; const nAsk: Boolean): Boolean;
 var nStr,nSR: string;
 begin
   if nAsk then
@@ -3174,6 +3174,9 @@ begin
     nStr := '是否要打印化验单?';
     if not QueryDlg(nStr, sAsk) then Exit;
   end else Result := False;
+
+  nHID := AdjustListStrFormat(nHID, '''', True, ',', False);
+  //添加引号
 
   {nStr := ' Select sr.*, sb.*,C_Name,(case when isnull(sb.L_HYPrintNum,0) > 0 THEN ''补'' ELSE '''' END) AS IsBuDan From $SR sr ' +
           ' ,($SB) sb , $Cus cus  ' +
@@ -3196,7 +3199,7 @@ begin
          ' Left Join %s sp on sp.P_ID=sr.R_PID';
   nSR := Format(nSR, [sTable_StockRecord, sTable_StockParam]);
 
-  nStr := 'Select hy.*,sr.*,C_Name, (H_BillDate-4) as H_QYDate From $HY hy ' +
+  nStr := 'Select hy.*,sr.*,C_Name, convert(varchar(100),(H_BillDate-4),23) as H_QYDate From $HY hy ' +
           ' Left Join $Cus cus on cus.C_ID=hy.H_Custom' +
           ' Left Join ($SR) sr on sr.R_SerialNo=H_SerialNo ' +
           'Where H_ID in ($ID)';
@@ -3225,6 +3228,14 @@ begin
   FDR.Dataset1.DataSet := FDM.SqlTemp;
   FDR.ShowReport;
   Result := FDR.PrintSuccess;
+
+  if Result  then
+  begin
+    nStr := ' UPDate %s Set L_HyPrintCount = L_HyPrintCount + 1 Where L_ID '+
+    ' in (Select Distinct H_Reporter From S_StockHuaYan where H_ID in (%s) ) ';
+    nStr := Format(nStr, [sTable_Bill, nHID]);
+    FDM.ExecuteSQL(nStr);
+  end;
 end;
 
 //Desc: 打印标识为nID的合格证

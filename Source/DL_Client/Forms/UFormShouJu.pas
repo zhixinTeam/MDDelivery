@@ -55,6 +55,7 @@ type
     procedure BtnOKClick(Sender: TObject);
     procedure EditIDPropertiesButtonClick(Sender: TObject;
       AButtonIndex: Integer);
+    procedure BtnExitClick(Sender: TObject);
   private
     { Private declarations }
     FRecordID: string;
@@ -102,7 +103,14 @@ begin
     begin
       FRecordID := '';
       Caption := '收据 - 添加';
-
+      if Trim(nP.FParamH) <> '' then
+        EditDate.Date    := StrToDateTime(nP.FParamH)
+      else
+        EditDate.Date    := Now;
+      if Trim(nP.FParamI) <> '' then
+        EditMan.Text     := Trim(nP.FParamI)
+      else
+        EditMan.Text     := gSysParam.FUserID;
       EditName.Text      := nP.FParamA;
       EditReason.Text    := nP.FParamB;
       EditPayingMan.Text := nP.FParamD;
@@ -181,7 +189,35 @@ end;
 procedure TfFormShouJu.FormClose(Sender: TObject;
   var Action: TCloseAction);
 var nIni: TIniFile;
+    nStr: string;
 begin
+//  if not IsDataValid then Exit;
+//
+//  if FRecordID = '' then
+//  begin
+//    nStr := MakeSQLByForm(Self, sTable_SysShouJu, '', True, GetData);
+//  end else
+//  begin
+//    nStr := 'R_ID=' + FRecordID;
+//    nStr := MakeSQLByForm(Self, sTable_SysShouJu, nStr, False, GetData);
+//  end;
+//
+//  FDM.ADOConn.BeginTrans;
+//  try
+//    FDM.ExecuteSQL(nStr);
+//    if FRecordID = '' then
+//         nStr := IntToStr(FDM.GetFieldMax(sTable_SysShouJu, 'R_ID'))
+//    else nStr := FRecordID;
+//
+//    FDM.ADOConn.CommitTrans;
+//    
+//    ModalResult := mrOK;
+//    ShowMsg('单据已保存', sHint);
+//  except
+//    FDM.ADOConn.RollbackTrans;
+//    ShowMsg('单据保存失败', sError);
+//  end;
+
   nIni := TIniFile.Create(gPath + sFormConfig);
   try
     SaveFormConfig(Self, nIni);
@@ -216,9 +252,6 @@ end;
 procedure TfFormShouJu.InitFormData(const nID: string);
 var nStr: string;
 begin
-  EditDate.Date := Now;
-  EditMan.Text := gSysParam.FUserID;
-
   if EditBank.Properties.Items.Count < 1 then
     LoadSysDictItem(sFlag_BankItem, EditBank.Properties.Items);
   //xxxxx
@@ -411,6 +444,37 @@ begin
     FDM.ADOConn.CommitTrans;
     PrintShouJuReport(nStr, True);
 
+    ModalResult := mrOK;
+    ShowMsg('单据已保存', sHint);
+  except
+    FDM.ADOConn.RollbackTrans;
+    ShowMsg('单据保存失败', sError);
+  end;
+end;
+
+procedure TfFormShouJu.BtnExitClick(Sender: TObject);
+var nStr: string;
+begin
+  if not IsDataValid then Exit;
+
+  if FRecordID = '' then
+  begin
+    nStr := MakeSQLByForm(Self, sTable_SysShouJu, '', True, GetData);
+  end else
+  begin
+    nStr := 'R_ID=' + FRecordID;
+    nStr := MakeSQLByForm(Self, sTable_SysShouJu, nStr, False, GetData);
+  end;
+
+  FDM.ADOConn.BeginTrans;
+  try
+    FDM.ExecuteSQL(nStr);
+    if FRecordID = '' then
+         nStr := IntToStr(FDM.GetFieldMax(sTable_SysShouJu, 'R_ID'))
+    else nStr := FRecordID;
+
+    FDM.ADOConn.CommitTrans;
+    
     ModalResult := mrOK;
     ShowMsg('单据已保存', sHint);
   except

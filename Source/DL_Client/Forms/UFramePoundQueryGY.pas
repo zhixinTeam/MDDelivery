@@ -51,6 +51,8 @@ type
     N12: TMenuItem;
     N13: TMenuItem;
     N14: TMenuItem;
+    N15: TMenuItem;
+    N16: TMenuItem;
     procedure EditDatePropertiesButtonClick(Sender: TObject;
       AButtonIndex: Integer);
     procedure EditTruckPropertiesButtonClick(Sender: TObject;
@@ -67,6 +69,8 @@ type
     procedure N11Click(Sender: TObject);
     procedure N12Click(Sender: TObject);
     procedure N13Click(Sender: TObject);
+    procedure N15Click(Sender: TObject);
+    procedure N16Click(Sender: TObject);
   private
     { Private declarations }
   protected
@@ -652,6 +656,120 @@ begin
 
     InitFormData(FWhere);
     ShowMsg('修改单价成功！', sHint);
+  finally
+    nList.Free;
+  end;
+end;
+
+//批量设置亏吨价
+procedure TfFramePoundQueryGY.N15Click(Sender: TObject);
+var nStr, nSql, nDIDs, nPrice : string;
+    nIdx: Integer;
+    nList: TStrings;
+begin
+  if cxView1.DataController.GetSelectedCount < 1 then
+  begin
+    ShowMsg('请选择要设置的记录', sHint); Exit;
+  end;
+
+  nList := TStringList.Create;
+  try
+    with cxView1.Controller do
+    begin
+      for nIdx:=0 to SelectedRowCount-1   do
+      begin
+        SelectedRows[nIdx].Focused:=True;
+        nStr := SQLQuery.FieldByName('D_ID').AsString;
+        if nStr = '' then
+          Continue;
+
+        nList.Add(nStr);
+      end;
+    end;
+
+    nDIDs := AdjustListStrFormat2(nList, '''', True, ',', False);
+    if Trim(nDIDs) = '' then
+    begin
+      ShowMsg('请选择要设置对应的记录', sHint);
+      Exit;    
+    end;
+
+    nSql := ' Select * From %s od Where D_ID In (%s) and isnull(D_YNKCPrice,''N'') = ''Y'' ';
+    nSql := Format(nSql, [sTable_OrderDtl, nDIDs]);
+    with FDM.QueryTemp(nSql) do
+    if RecordCount > 0 then
+    begin
+      ShowMsg('存在已设置亏吨价的记录,请过滤后再设置', sHint);
+      Exit;
+    end;
+
+    nPrice := '0';
+    if not ShowInputBox('请输入亏吨价:', '修改', nPrice, 100) then Exit;
+
+    if StrToCurrDef(nPrice,0) <= 0 then Exit;
+
+    nStr := 'Update %s Set D_KCPrice=''%s'', D_YNKCPrice=''Y'' Where D_ID In (%s) ';
+    nStr := Format(nStr, [sTable_OrderDtl, nPrice, nDIDs]);
+    FDM.ExecuteSQL(nStr);
+    
+    nStr := '采购单设置亏吨价[%s].';
+    nStr := Format(nStr, [nPrice]);
+    FDM.WriteSysLog(sFlag_BillItem, gSysParam.FUserName, nStr, False);
+
+    InitFormData(FWhere);
+    ShowMsg('设置亏吨价成功！', sHint);
+  finally
+    nList.Free;
+  end;
+end;
+
+//批量修改亏吨价
+procedure TfFramePoundQueryGY.N16Click(Sender: TObject);
+var nStr, nSql, nDIDs, nPrice : string;
+    nIdx: Integer;
+    nList: TStrings;
+begin
+  if cxView1.DataController.GetSelectedCount < 1 then
+  begin
+    ShowMsg('请选择要修改的记录', sHint); Exit;
+  end;
+
+  nList := TStringList.Create;
+  try
+    with cxView1.Controller do
+    begin
+      for nIdx:=0 to SelectedRowCount-1   do
+      begin
+        SelectedRows[nIdx].Focused:=True;
+        nStr := SQLQuery.FieldByName('D_ID').AsString;
+        if nStr = '' then
+          Continue;
+
+        nList.Add(nStr);
+      end;
+    end;
+    nDIDs := AdjustListStrFormat2(nList, '''', True, ',', False);
+    if Trim(nDIDs) = '' then
+    begin
+      ShowMsg('请选择要修改对应的记录', sHint);
+      Exit;    
+    end;
+
+    nPrice :=  SQLQuery.FieldByName('D_KCPrice').AsString;
+    if not ShowInputBox('请输入亏吨价:', '修改', nPrice, 100) then Exit;
+
+    if StrToCurrDef(nPrice,0) <= 0 then Exit;
+
+    nStr := ' Update %s Set D_KCPrice=''%s'', D_YNKCPrice=''Y'' Where D_ID In (%s) ';
+    nStr := Format(nStr, [sTable_OrderDtl, nPrice, nDIDs]);
+    FDM.ExecuteSQL(nStr);
+    
+    nStr := '采购单设置亏吨价[%s].';
+    nStr := Format(nStr, [nPrice]);
+    FDM.WriteSysLog(sFlag_BillItem, gSysParam.FUserName, nStr, False);
+
+    InitFormData(FWhere);
+    ShowMsg('修改亏吨价成功！', sHint);
   finally
     nList.Free;
   end;

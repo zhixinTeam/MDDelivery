@@ -151,6 +151,17 @@ inherited fFrameSalesMan: TfFrameSalesMan
     OnPopup = PMenu1Popup
     Left = 4
     Top = 264
+    object N5: TMenuItem
+      Caption = #20801#35768#24320#21333
+      OnClick = N5Click
+    end
+    object N6: TMenuItem
+      Caption = #19981#20801#35768#24320#21333
+      OnClick = N6Click
+    end
+    object N7: TMenuItem
+      Caption = '-'
+    end
     object N1: TMenuItem
       Tag = 10
       Caption = #26080#25928#20154#21592

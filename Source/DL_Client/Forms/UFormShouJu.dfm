@@ -1,8 +1,10 @@
 inherited fFormShouJu: TfFormShouJu
   Left = 634
   Top = 211
+  BorderIcons = [biSystemMenu]
   ClientHeight = 395
   ClientWidth = 512
+  Position = poDesktopCenter
   OnClose = FormClose
   OnCreate = FormCreate
   PixelsPerInch = 96
@@ -160,6 +162,7 @@ inherited fFormShouJu: TfFormShouJu
       Left = 81
       Top = 106
       Hint = 'T.S_InOutID'
+      ParentFont = False
       TabOrder = 5
       Width = 121
     end

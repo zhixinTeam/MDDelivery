@@ -37,6 +37,7 @@ type
     EditID: TcxButtonEdit;
     dxLayout1Item8: TdxLayoutItem;
     N3: TMenuItem;
+    N4: TMenuItem;
     procedure EditIDPropertiesButtonClick(Sender: TObject;
       AButtonIndex: Integer);
     procedure BtnAddClick(Sender: TObject);
@@ -47,6 +48,7 @@ type
     procedure EditDatePropertiesButtonClick(Sender: TObject;
       AButtonIndex: Integer);
     procedure Check1Click(Sender: TObject);
+    procedure N4Click(Sender: TObject);
   private
     { Private declarations }
   protected
@@ -55,6 +57,8 @@ type
     procedure OnCreateFrame; override;
     procedure OnDestroyFrame; override;
     function InitFormDataSQL(const nWhere: string): string; override;
+    function GetVal(const nRow: Integer; const nField: string): string;
+    //获取指定字段
     {*查询SQL*}
   public
     { Public declarations }
@@ -235,6 +239,47 @@ procedure TfFrameHYData.Check1Click(Sender: TObject);
 begin
   inherited;
   InitFormData('');
+end;
+
+procedure TfFrameHYData.N4Click(Sender: TObject);
+var nStr: string;
+    nIdx: Integer;
+    nList: TStrings;
+begin
+  if cxView1.DataController.GetSelectedCount < 1 then
+  begin
+    ShowMsg('请选择要编辑的记录', sHint); Exit;
+  end;
+
+  nList := TStringList.Create;
+  try
+    for nIdx := 0 to cxView1.DataController.RowCount - 1  do
+    begin
+
+      nStr := GetVal(nIdx,'H_ID');
+      if nStr = '' then
+        Continue;
+
+      nList.Add(nStr);
+    end;
+    nStr := AdjustListStrFormat2(nList, '''', True, ',', False);
+    PrintHuaYanReport(nStr, False);
+  finally
+    nList.Free;
+  end;
+end;
+
+function TfFrameHYData.GetVal(const nRow: Integer;
+  const nField: string): string;
+var nVal: Variant;
+begin
+  nVal := cxView1.ViewData.Rows[nRow].Values[
+            cxView1.GetColumnByFieldName(nField).Index];
+  //xxxxx
+
+  if VarIsNull(nVal) then
+       Result := ''
+  else Result := nVal;
 end;
 
 initialization
