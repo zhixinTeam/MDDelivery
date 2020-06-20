@@ -300,7 +300,7 @@ function PrintPoundReport(const nPound: string; nAsk: Boolean;
 function PrintPoundReportKS(const nPound: string; nAsk: Boolean;
                           const nMul: Boolean = False): Boolean;
 //打印矿山榜单
-function PrintHuaYanReport(nHID: string; const nAsk: Boolean): Boolean;
+function PrintHuaYanReport(nHID: string; const nAsk: Boolean;const nShow:Boolean): Boolean;
 function PrintHeGeReport(const nHID: string; const nAsk: Boolean): Boolean;
 //化验单,合格证
 function PrintBillFYDReport(const nBill: string;  const nAsk: Boolean): Boolean;
@@ -3165,7 +3165,7 @@ begin
 end;
 
 //Desc: 打印标识为nHID的化验单
-function PrintHuaYanReport(nHID: string; const nAsk: Boolean): Boolean;
+function PrintHuaYanReport(nHID: string; const nAsk: Boolean;const nShow:Boolean): Boolean;
 var nStr,nSR: string;
 begin
   if nAsk then
@@ -3208,7 +3208,6 @@ begin
   nStr := MacroValue(nStr, [MI('$HY', sTable_StockHuaYan),
           MI('$Cus', sTable_Customer), MI('$SR', nSR), MI('$ID', nHID)]);
   //xxxxx
-
   if FDM.QueryTemp(nStr).RecordCount < 1 then
   begin
     nStr := '编号为[ %s ] 的化验单记录已无效!!';
@@ -3226,7 +3225,14 @@ begin
   end;
 
   FDR.Dataset1.DataSet := FDM.SqlTemp;
-  FDR.ShowReport;
+  if nShow then
+  begin
+    FDR.ShowReport;
+  end
+  else
+  begin
+    FDR.PrintReport;
+  end;
   Result := FDR.PrintSuccess;
 
   if Result  then

@@ -96,7 +96,7 @@ type
     //是否采用道闸
     FAutoTruckOut : Boolean;
     //是否自动出厂
-    FRFID,FRFIDEx : string; 
+    FRFID,FRFIDEx,FRFIDTG : string; 
     FSaveResult: Boolean;
     //保存结果
     FEmptyPoundInit, FDoneEmptyPoundInit: Int64;
@@ -272,6 +272,7 @@ begin
   FAutoTruckOut := False;
   FRFID   := '';
   FRFIDEx := '';
+  FRFIDTG := '';
   if Assigned(FPoundTunnel.FOptions) then
   with FPoundTunnel.FOptions do
   begin
@@ -283,6 +284,7 @@ begin
     FAutoTruckOut := Values['AutoTruckOut'] = sFlag_Yes;
     FRFID         := Values['rfid'];
     FRFIDEx       := Values['rfidex'];
+    FRFIDTG       := Values['RFIDTG'];
   end;
 end;
 
@@ -1595,20 +1597,14 @@ end;
 procedure TfFrameAutoPoundItem.btnQianganClick(Sender: TObject);
 var nReader:string;
 begin
-  nReader := FRFID;
-  if nReader='' then
-    nReader := FLastReader;
-
+  nReader := FRFIDTG;
   OpenDoorByReader(nReader);
 end;
 
 procedure TfFrameAutoPoundItem.btnhouganClick(Sender: TObject);
 var nReader:string;
 begin
-  nReader := FRFID;
-  if nReader='' then
-    nReader := FLastReader;
-
+  nReader := FRFIDTG;
   OpenDoorByReader(nReader, sFlag_No);
 end;
 

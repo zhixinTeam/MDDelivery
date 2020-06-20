@@ -220,7 +220,7 @@ begin
   if cxView1.DataController.GetSelectedCount > 0 then
   begin
     nStr := SQLQuery.FieldByName('H_ID').AsString;
-    PrintHuaYanReport(nStr, False);
+    PrintHuaYanReport(nStr, False,True);
   end;
 end;
 
@@ -251,7 +251,7 @@ begin
     ShowMsg('请选择要编辑的记录', sHint); Exit;
   end;
 
-  nList := TStringList.Create;
+ // nList := TStringList.Create;
   try
     for nIdx := 0 to cxView1.DataController.RowCount - 1  do
     begin
@@ -259,13 +259,13 @@ begin
       nStr := GetVal(nIdx,'H_ID');
       if nStr = '' then
         Continue;
-
-      nList.Add(nStr);
+      PrintHuaYanReport(nStr, False,False);
+      // nList.Add(nStr);
     end;
-    nStr := AdjustListStrFormat2(nList, '''', True, ',', False);
-    PrintHuaYanReport(nStr, False);
+    //nStr := AdjustListStrFormat2(nList, '''', True, ',', False);
+    //PrintHuaYanReport(nStr, False);
   finally
-    nList.Free;
+   // nList.Free;
   end;
 end;
 

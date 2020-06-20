@@ -61,6 +61,7 @@ type
     procedure N10Click(Sender: TObject);
     procedure N11Click(Sender: TObject);
   private
+    FNum1,Fnum2,FNum3: Double;
     { Private declarations }
   protected
     FStart,FEnd: TDate;
@@ -92,8 +93,29 @@ begin
 end;
 
 procedure TfFrameOrderDetailQuery.OnCreateFrame;
+var
+  nStr: string;
 begin
   inherited;
+  nStr := 'Select * From %s ';
+  nStr := Format(nStr, [sTable_KSKD]);
+  FDM.QueryTemp(nStr);
+  with FDM.SqlTemp do
+  begin
+    if (RecordCount < 1) then
+    begin
+      FNum1 := 0;
+      FNum2 := 0;
+      FNum3 := 0;
+    end
+    else
+    begin
+      FNum1 := FieldByName('P_Num1').AsFloat;
+      FNum2 := FieldByName('P_Num2').AsFloat;
+      FNum3 := FieldByName('P_Num3').AsFloat;
+    end;
+  end;
+
   FTimeS := Str2DateTime(Date2Str(Now) + ' 00:00:00');
   FTimeE := Str2DateTime(Date2Str(Now) + ' 00:00:00');
 
@@ -125,12 +147,32 @@ begin
   {$ENDIF}
 
   EditDate.Text := Format('%s жа %s', [Date2Str(FStart), Date2Str(FEnd)]);
-  Result := 'Select *,(D_MValue-D_PValue) as D_NetWeight, ' +
-            '(D_MValue-D_PValue-isnull(D_KZValue,0)) as D_NetWeightEx,'+
-            '(D_MValue-isnull(D_KZValue,0)) as D_MValueEx,'+
-            '( select Top 1 T_Owner from S_Truck where T_Truck = D_Truck ) as T_Owner,' +
-            ' '''+EditDate.Text+''' as P_BetweenTime From $OD od Inner Join $OO oo on od.D_OID=oo.O_ID ';
-  //xxxxxx
+
+  if FNum1 > 0 then
+  begin
+    Result := ' Select *,' +
+              ' (D_MValue-D_PValue) as D_NetWeight,'+
+              ' case When ((Select isnull(M_AutoKZ,''N'') from P_Materails where M_ID = od.D_StockNo) = ''Y'') and ((isnull(P_IsKS,''N'') = ''Y'')) then ' +
+              ' (case When (D_MValue-D_PValue) >= '+Floattostr(FNum1)+' then D_PValue+'+Floattostr(FNum2)+
+              ' else (D_MValue-'+Floattostr(FNum3)+') end) '+
+              ' else (D_MValue-isnull(D_KZValue,0)) end D_MValueEx,  '+
+              ' case When ((Select isnull(M_AutoKZ,''N'') from P_Materails where M_ID = od.D_StockNo) = ''Y'') and ((isnull(P_IsKS,''N'') = ''Y''))  then ' +
+              ' (case When (D_MValue-D_PValue) >= '+Floattostr(FNum1)+' then '+Floattostr(FNum2)+
+              ' else (D_MValue-D_PValue-'+Floattostr(FNum3)+') end) '+
+              ' else (D_MValue-D_PValue-isnull(D_KZValue,0)) end D_NetWeightEx,  '+
+              '( select Top 1 T_Owner from S_Truck where T_Truck = D_Truck ) as T_Owner,' +
+              ' '''+EditDate.Text+''' as P_BetweenTime From $OD od Inner Join $OO oo on od.D_OID=oo.O_ID ' +
+              ' Inner Join Sys_PoundLog pl on od.D_ID=pl.P_Order ';
+  end
+  else
+  begin
+    Result := 'Select *,(D_MValue-D_PValue) as D_NetWeight, ' +
+              '(D_MValue-D_PValue-isnull(D_KZValue,0)) as D_NetWeightEx,'+
+              '(D_MValue-isnull(D_KZValue,0)) as D_MValueEx,'+
+              '( select Top 1 T_Owner from S_Truck where T_Truck = D_Truck ) as T_Owner,' +
+              ' '''+EditDate.Text+''' as P_BetweenTime From $OD od Inner Join $OO oo on od.D_OID=oo.O_ID ';
+    //xxxxxx
+  end;
 
   if FJBWhere = '' then
   begin

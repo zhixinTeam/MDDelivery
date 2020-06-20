@@ -317,7 +317,7 @@ var nStr: string;
 begin
   nStr := IntToStr(FDM.GetFieldMax(sTable_StockHuaYan, 'H_ID'));
   PrintHeGeReport(nStr, True);
-  PrintHuaYanReport(nStr, True);
+  PrintHuaYanReport(nStr, True,True);
 end;
 
 procedure TfFormHYData.EditNameKeyPress(Sender: TObject; var Key: Char);

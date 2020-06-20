@@ -72,6 +72,7 @@ type
     procedure N15Click(Sender: TObject);
     procedure N16Click(Sender: TObject);
   private
+    FNum1,Fnum2,FNum3: Double;
     { Private declarations }
   protected
     FStart,FEnd: TDate;
@@ -104,6 +105,8 @@ begin
 end;
 
 procedure TfFramePoundQueryGY.OnCreateFrame;
+var
+  nStr: string;
 begin
   inherited;
   FTimeS := Str2DateTime(Date2Str(Now) + ' 00:00:00');
@@ -111,6 +114,26 @@ begin
 
   FJBWhere := '';
   InitDateRange(Name, FStart, FEnd);
+
+  nStr := 'Select * From %s ';
+  nStr := Format(nStr, [sTable_KSKD]);
+  FDM.QueryTemp(nStr);
+  with FDM.SqlTemp do
+  begin
+    if (RecordCount < 1) then
+    begin
+      FNum1 := 0;
+      FNum2 := 0;
+      FNum3 := 0;
+    end
+    else
+    begin
+      FNum1 := FieldByName('P_Num1').AsFloat;
+      FNum2 := FieldByName('P_Num2').AsFloat;
+      FNum3 := FieldByName('P_Num3').AsFloat;
+    end;
+  end;
+  
   cxView1.OptionsSelection.MultiSelect := True;
   if gSysParam.FIsAdmin then
     N13.Enabled := True
@@ -145,14 +168,37 @@ begin
 
   EditDate.Text := Format('%s жа %s', [Date2Str(FStart), Date2Str(FEnd)]);
 
-  Result := ' Select pl.*,od.*,(P_MValue-P_PValue-isnull(P_KZValue,0)) As P_NetWeight,' +
-            ' (P_MValue-P_PValue-isnull(P_KZValue,0)-P_OldValue) as P_FZValue,'+
-            ' (P_MValue - isnull(P_KZValue,0)) As P_MValueEx, ' +
-            '( select T_Owner from S_Truck where T_Truck = P_Truck ) as T_Owner,' +
-            ' ABS((P_MValue-P_PValue)-P_LimValue) As P_Wucha '+
-            ' From $PL pl ' +
-            ' Left Join $OD od On (od.D_ID=pl.P_Order)';
-  //xxxxx
+  if FNum1 > 0 then
+  begin
+    Result := ' Select pl.*,od.*,' +
+              ' case When ((Select isnull(M_AutoKZ,''N'') from P_Materails where M_ID = pl.P_MID) = ''Y'') and ((isnull(P_IsKS,''N'') = ''Y'')) then ' +
+              ' (case When (P_MValue-P_PValue) >= '+Floattostr(FNum1)+' then P_PValue+'+Floattostr(FNum2)+
+              ' else (P_MValue-'+Floattostr(FNum3)+') end) '+
+              ' else (P_MValue-isnull(P_KZValue,0)) end P_MValueEx,  '+
+              ' case When ((Select isnull(M_AutoKZ,''N'') from P_Materails where M_ID = pl.P_MID) = ''Y'') and ((isnull(P_IsKS,''N'') = ''Y'')) then ' +
+              ' (case When (P_MValue-P_PValue) >= '+Floattostr(FNum1)+' then '+Floattostr(FNum2)+
+              ' else (P_MValue-P_PValue-'+Floattostr(FNum3)+') end) '+
+              ' else (P_MValue-P_PValue-isnull(P_KZValue,0)) end P_NetWeight,  '+
+              ' case When ((Select isnull(M_AutoKZ,''N'') from P_Materails where M_ID = pl.P_MID) = ''Y'') and ((isnull(P_IsKS,''N'') = ''Y'')) then ' +
+              ' (case When (P_MValue-P_PValue) >= '+Floattostr(FNum1)+' then -P_OldValue+'+Floattostr(FNum2)+
+              ' else (P_MValue-P_PValue-P_OldValue-'+Floattostr(FNum3)+') end) '+
+              ' else (P_MValue-P_PValue-isnull(P_KZValue,0)-P_OldValue) end P_FZValue,  '+
+              '( select Top 1 T_Owner from S_Truck where T_Truck = P_Truck ) as T_Owner,' +
+              ' ABS((P_MValue-P_PValue)-P_LimValue) As P_Wucha '+
+              ' From $PL pl ' +
+              ' Left Join $OD od On (od.D_ID=pl.P_Order)';
+  end
+  else
+  begin
+    Result := ' Select pl.*,od.*,(P_MValue-P_PValue-isnull(P_KZValue,0)) As P_NetWeight,' +
+              ' (P_MValue-P_PValue-isnull(P_KZValue,0)-P_OldValue) as P_FZValue,'+
+              ' (P_MValue - isnull(P_KZValue,0)) As P_MValueEx, ' +
+              '( select Top 1 T_Owner from S_Truck where T_Truck = P_Truck ) as T_Owner,' +
+              ' ABS((P_MValue-P_PValue)-P_LimValue) As P_Wucha '+
+              ' From $PL pl ' +
+              ' Left Join $OD od On (od.D_ID=pl.P_Order)';
+    //xxxxx
+  end;
   if FJBWhere = '' then
   begin
 //    Result := Result + ' Where  ' +
