@@ -204,10 +204,10 @@ begin
 //    Result := Result + ' Where  ' +
 //              ' (isnull(P_MDate,P_PDate) >=''$S'' and isnull(P_MDate,P_PDate)<''$E'') and (isnull(P_TwoState,''N'') = ''Y'') and P_Type = ''P'' ';
     Result := Result + ' Where ' +
-              ' (P_PDate >= ''$S'' and P_PDate < ''$E'') and (isnull(P_TwoState,''N'') = ''Y'') and P_Type = ''P'' ';
+              ' (P_PDate >= ''$S'' and P_PDate < ''$E'') and ((isnull(P_TwoState,''N'') = ''Y'') or (GetDate()-P_PDate>=2)) and P_Type = ''P'' ';
   end else
   begin
-    Result := Result + ' Where (' + FJBWhere + ')  and (isnull(P_TwoState,''N'') = ''Y'' and P_Type = ''P'' ';
+    Result := Result + ' Where (' + FJBWhere + ')  and ((isnull(P_TwoState,''N'') = ''Y'') or (GetDate()-P_PDate>=2)) and P_Type = ''P'' ';
   end;
 
   if CheckDelete.Checked then

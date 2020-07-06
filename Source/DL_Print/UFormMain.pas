@@ -378,7 +378,7 @@ begin
           ' H_EachTruck,H_ReportDate,H_Reporter, ' +
           ' CASE WHEN ((L_HDORDERID IS NULL) OR (L_HDORDERID = '''')) THEN L_VALUE ELSE ' +
           ' (SELECT SUM(ISNULL(L_VALUE,0)) FROM S_BILL WHERE L_HDORDERID = B.L_HDORDERID) END AS H_Value, ' +
-          ' sr.*,C_Name, (H_BillDate-4) as H_QYDate From $HY hy ' +
+          ' sr.*,C_Name, convert(varchar(100),(H_BillDate-4),23) as H_QYDate From $HY hy ' +
           ' inner join S_Bill b on hy.H_Reporter = b.L_ID '+
           ' Left Join $Cus cus on cus.C_ID=hy.H_Custom ' +
           ' Left Join ($SR) sr on sr.R_SerialNo=H_SerialNo ' +

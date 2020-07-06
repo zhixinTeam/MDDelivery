@@ -867,6 +867,26 @@ begin
   nMoney := GetCustomerValidMoney(FIn.FData);
   {$ENDIF}
 
+  nStr := ' Select S_ID from S_Salesman Where S_YNOrder = ''N'' and S_ID = (Select C_SaleMan from S_Customer Where C_Id=''%s'' ) ';
+  nStr := Format(nstr,[FIn.FData]);
+  with gDBConnManager.WorkerQuery(FDBConn, nStr), FPacker.XMLBuilder do
+  begin
+    if RecordCount > 0 then
+    begin
+      nData := '客户(%s)所属业务员暂停下单.';
+      nData := Format(nData, [FIn.FData]);
+
+      with Root.NodeNew('EXMG') do
+      begin
+        NodeNew('MsgTxt').ValueAsString := nData;
+        NodeNew('MsgResult').ValueAsString := sFlag_No;
+        NodeNew('MsgCommand').ValueAsString := IntToStr(FIn.FCommand);
+      end;
+      nData := FPacker.XMLBuilder.WriteToString;
+      Exit;
+    end;
+  end;
+
   //使用业务员授信
   {$IFDEF UseSalesCredit}
     nStr := 'select C_SaleMan from %s where C_Id=''%s''';

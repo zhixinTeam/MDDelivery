@@ -789,8 +789,9 @@ var nStr: string;
     nMoney,nMValueMax: Double;
     nFixMoney: Boolean;
 begin
-  Result := False;
+  Result      := False;
   //init
+  FSaveResult := False;
 
   if FBillItems[0].FNextStatus = sFlag_TruckBFP then
   begin
@@ -1084,8 +1085,9 @@ var
   nNextStatus: string;
   nVal: Double;
 begin
-  Result := False;
+  Result      := False;
   //init
+  FSaveResult := False;
 
   if (FUIData.FPData.FValue > 0) and (FUIData.FMData.FValue > 0) then
   begin

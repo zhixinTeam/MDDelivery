@@ -734,7 +734,7 @@ begin
           ' H_EachTruck,H_ReportDate,H_Reporter, ' +
           ' CASE WHEN ((L_HDORDERID IS NULL) OR (L_HDORDERID = '''')) THEN L_VALUE ELSE ' +
           ' (SELECT SUM(ISNULL(L_VALUE,0)) FROM S_BILL WHERE L_HDORDERID = sb.L_HDORDERID) END AS H_Value, ' +
-          ' sr.*,sb.*, C_Name, (H_BillDate-4) as H_QYDate,'+
+          ' sr.*,sb.*, C_Name, convert(varchar(100),(H_BillDate-4),23) as H_QYDate,'+
           ' (case when isnull(sb.L_HyPrintCount,0)>0 THEN ''ฒน'' ELSE '''' END) AS IsBuDan From $HY hy ' +
           ' inner join $SB sb on hy.H_Reporter = sb.L_ID '+
           ' Left Join $Cus cus on cus.C_ID=hy.H_Custom ' +

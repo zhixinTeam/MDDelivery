@@ -448,7 +448,10 @@ begin
     EditType.ItemIndex := 0;
     EditStock.Text  := nOrderItem.FGoodsID;
     EditSName.Text  := nOrderItem.FGoodsname;
-    EditValue.Text  := nOrderItem.FData;
+    if StrToFloatDef(nOrderItem.FData,0) <= 50 then
+      EditValue.Text := nOrderItem.FData
+    else
+      EditValue.Text := '50';
     EditTruck.Text  := nOrderItem.Ftracknumber;
     EditCus.Text    := nOrderItem.FCusID;
     EditCName.Text  := nOrderItem.FCusName;
@@ -790,8 +793,8 @@ begin
     ShowMsg(nMsg,sWarn);
   end;
   Result := True;
-  if nPrint then
-    PrintBillReport(nBillID, True);
+//  if nPrint then
+//    PrintBillReport(nBillID, True);
  //print report
 end;
 
