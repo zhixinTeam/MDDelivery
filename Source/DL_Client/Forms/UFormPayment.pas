@@ -350,11 +350,11 @@ begin
     nHint := '请填写付款方式';
   end else
 
-  if Sender = EditPrice1 then
-  begin
-    Result := StrToFloatDef(Trim(EditPrice1.Text),0) > 0;
-    nHint := '请填写价格信息';
-  end else
+//  if Sender = EditPrice1 then
+//  begin
+//    Result := StrToFloatDef(Trim(EditPrice1.Text),0) > 0;
+//    nHint := '请填写价格信息';
+//  end else
 
   if Sender = EditStockName1 then
   begin
@@ -377,14 +377,14 @@ var
 begin
   if not IsDataValid then Exit;
 
-  nPriceStock := EditStockName1.Text +':'+EditPrice1.Text;
+  nPriceStock := EditStockName1.Text;  //+':'+EditPrice1.Text;
   if Trim(EditStockName2.Text) <> '' then
   begin
-    nPriceStock := nPriceStock +' '+ EditStockName2.Text +':'+EditPrice2.Text;
+    nPriceStock := nPriceStock +' '+ EditStockName2.Text; // +':'+EditPrice2.Text;
   end;
   if Trim(EditStockName3.Text) <> '' then
   begin
-    nPriceStock := nPriceStock +' '+ EditStockName3.Text +':'+EditPrice3.Text;
+    nPriceStock := nPriceStock +' '+ EditStockName3.Text;// +':'+EditPrice3.Text;
   end;
   if not SaveCustomerPayment(gInfo.FCusID, gInfo.FCusName,
      GetCtrlData(EditSalesMan), sFlag_MoneyHuiKuan, EditType.Text, EditDesc.Text,
@@ -530,7 +530,7 @@ begin
   inherited;
   nStr := SmallTOBig(StrToFloat(EditMoney.Text));
   ShowMessage(nStr);
-  ActiveControl := EditPrice1;
+  ActiveControl := EditStockName1;
 end;
 
 procedure TfFormPayment.EditPayingUnitKeyPress(Sender: TObject;

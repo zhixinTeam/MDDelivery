@@ -347,13 +347,13 @@ begin
   begin
     Result := Trim(EditType.Text) <> '';
     nHint := '请填写付款方式';
-  end else
-
-  if Sender = EditPrice1 then
-  begin
-    Result := StrToFloatDef(Trim(EditPrice1.Text),0) > 0;
-    nHint := '请填写价格信息';
-  end else
+  end
+  else
+//  if Sender = EditPrice1 then
+//  begin
+//    Result := StrToFloatDef(Trim(EditPrice1.Text),0) > 0;
+//    nHint := '请填写价格信息';
+//  end else
 
   if Sender = EditStockName1 then
   begin
@@ -405,14 +405,14 @@ begin
     end;
   end;
 
-  nPriceStock := EditStockName1.Text +':'+EditPrice1.Text;
+  nPriceStock := EditStockName1.Text; // +':'+EditPrice1.Text;
   if Trim(EditStockName2.Text) <> '' then
   begin
-    nPriceStock := nPriceStock +' '+ EditStockName2.Text +':'+EditPrice2.Text;
+    nPriceStock := nPriceStock +' '+ EditStockName2.Text; // +':'+EditPrice2.Text;
   end;
   if Trim(EditStockName3.Text) <> '' then
   begin
-    nPriceStock := nPriceStock +' '+ EditStockName3.Text +':'+EditPrice3.Text;
+    nPriceStock := nPriceStock +' '+ EditStockName3.Text; // +':'+EditPrice3.Text;
   end;
   
   if not SaveCustomerKPPayment(gInfo.FCusID, gInfo.FCusName,

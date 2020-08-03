@@ -261,7 +261,7 @@ inherited fFormShouJu: TfFormShouJu
               ControlOptions.ShowBorder = False
             end
             object dxLayout1Item15: TdxLayoutItem
-              Caption = #21697#31181#21333#20215':'
+              Caption = #21697#31181#21517#31216':'
               Control = EditPriceStock
               ControlOptions.ShowBorder = False
             end
