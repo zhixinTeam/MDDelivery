@@ -77,6 +77,7 @@ type
     //定制放灰调用小屏显示
     function LineClose(var nData: string): Boolean;
     //定制放灰
+    function ReadBaseWeight(var nData: string): Boolean;
   public
     constructor Create; override;
     destructor destroy; override;
@@ -92,7 +93,7 @@ uses
 	{$IFDEF MultiReplay}UMultiJS_Reply, {$ELSE}UMultiJS, {$ENDIF}
   {$IFDEF UseModbusJS}UMultiModBus_JS, {$ENDIF}
   UMgrHardHelper, UMgrCodePrinter, UMgrQueue, UTaskMonitor,
-  UMgrTruckProbe, UMgrERelay;
+  UMgrTruckProbe, UMgrERelay,UMgrBasisWeight, UMgrPoundTunnels;
 
 //Date: 2012-3-13
 //Parm: 如参数护具
@@ -258,6 +259,7 @@ begin
 
    cBC_ShowLedTxt           : Result := ShowLedText(nData);
    cBC_LineClose            : Result := LineClose(nData);
+   cBC_ReadBaseWeight       : Result := ReadBaseWeight(nData);
    //xxxxxx
    else
     begin
@@ -778,6 +780,37 @@ begin
   else
     gERelayManager.LineClose(nTunnel);
   Result := True;
+end;
+
+function THardwareCommander.ReadBaseWeight(var nData: string): Boolean;
+var nTunnel: string;
+    nPound: TBWTunnel;
+    nPT: PPTTunnelItem;
+begin
+  Result := True;
+  FListA.Clear;
+  nTunnel := FIn.FData;
+  WriteLog('读取库底计量:'+nTunnel);
+  with gBasisWeightManager.TunnelManager do
+  begin
+    nPT := GetTunnel(nTunnel);
+    if not Assigned(nPT) then
+    begin
+      WriteLog('读取库底计量:通道' + nTunnel + '未启用');
+      FOut.FData := PackerEncodeStr(FListA.Text);
+      Exit;
+    end;
+  end;
+  if gBasisWeightManager.IsTunnelBusy(nTunnel, @nPound) then //通道忙
+  begin
+    FListA.Values['Bill']     := nPound.FBill;
+    FListA.Values['PValue']   := FloatToStr(nPound.FValTruckP);
+    FListA.Values['Value']    := FloatToStr(nPound.FValue);
+    FListA.Values['ValueMax'] := FloatToStr(nPound.FValMax);
+    FListA.Values['MValue']   := FloatToStr(nPound.FValTunnel);
+    FListA.Values['NetValue'] := FloatToStr(nPound.FValTunnel-nPound.FValTruckP);
+  end;
+  FOut.FData := PackerEncodeStr(FListA.Text);
 end;
 
 initialization

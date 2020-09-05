@@ -36,7 +36,8 @@ uses
   {$IFDEF UseModbusJS}UMultiModBus_JS, {$ENDIF}
   {$IFDEF UseLBCModbus}UMgrLBCModusTcp, {$ENDIF}
   UMgrERelay, UMgrRemoteVoice, UMgrCodePrinter, UMgrTTCEM100, UMgrBasisWeight,
-  UMgrRFID102, UMgrVoiceNet, UBlueReader, UMgrSendCardNo, UMgrBXFontCard;
+  UMgrRFID102, UMgrVoiceNet, UBlueReader, UMgrSendCardNo,UMgrERelayPLC,
+  UMgrCamera, UMgrBXFontCard;
 
 class function THardwareWorker.ModuleInfo: TPlugModuleInfo;
 begin
@@ -140,6 +141,20 @@ begin
       gBasisWeightManager := TBasisWeightManager.Create;
       gBasisWeightManager.LoadConfig(nCfg + 'Tunnels.xml');
     end;
+    {$ENDIF}
+
+    {$IFDEF UseERelayPLC}
+    nStr := '车检由PLC控制';
+    if FileExists(nCfg + 'ERelayPLC.xml') then
+    begin
+      gERelayManagerPLC := TERelayManager.Create;
+      gERelayManagerPLC.LoadConfig(nCfg + 'ERelayPLC.xml');
+    end;
+    {$ENDIF}
+
+    {$IFDEF HKVDVR}
+    nStr := '硬盘录像机';
+    gCameraManager.LoadConfig(nCfg + cCameraXML);
     {$ENDIF}
 
 //    {$IFDEF FixLoad}
@@ -263,6 +278,18 @@ begin
   gBasisWeightManager.OnStatusChange := WhenBasisWeightStatusChange;
   gBasisWeightManager.StartService;
   {$ENDIF}
+
+  {$IFDEF UseERelayPLC}
+  if Assigned(gERelayManagerPLC) then
+    gERelayManagerPLC.StartService;
+  //车检由PLC控制
+  {$ENDIF}
+
+  {$IFDEF HKVDVR}
+  gCameraManager.OnCameraProc := WhenCaptureFinished;
+  gCameraManager.ControlStart;
+  //硬盘录像机
+  {$ENDIF}
 end;
 
 procedure THardwareWorker.AfterStopServer;
@@ -324,6 +351,18 @@ begin
   {$IFDEF BasisWeight}
   gBasisWeightManager.StopService;
   gBasisWeightManager.OnStatusChange := nil;
+  {$ENDIF}
+
+  {$IFDEF UseERelayPLC}
+  if Assigned(gERelayManagerPLC) then
+    gERelayManagerPLC.StopService;
+  //车检由PLC控制
+  {$ENDIF}
+
+  {$IFDEF HKVDVR}
+  gCameraManager.OnCameraProc := nil;
+  gCameraManager.ControlStop;
+  //硬盘录像机
   {$ENDIF}
 
 //  {$IFDEF FixLoad}

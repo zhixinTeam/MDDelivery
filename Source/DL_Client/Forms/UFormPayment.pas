@@ -356,11 +356,11 @@ begin
 //    nHint := '请填写价格信息';
 //  end else
 
-  if Sender = EditStockName1 then
-  begin
-    Result :=  Trim(EditStockName1.Text) <> '';
-    nHint := '请填写品种信息';
-  end else
+//  if Sender = EditStockName1 then
+//  begin
+//    Result :=  Trim(EditStockName1.Text) <> '';
+//    nHint := '请填写品种信息';
+//  end else
 
   if Sender = EditMoney then
   begin

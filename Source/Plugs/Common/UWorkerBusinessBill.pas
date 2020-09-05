@@ -77,6 +77,10 @@ type
     //获取岗位交货单
     function SavePostBillItems(var nData: string): Boolean;
     //保存岗位交货单
+    function GetInBillInterval: Integer;
+    //停车场有效时间
+    function GetVerifyCard: Boolean;
+    //是否启用取卡校验
   public
     constructor Create; override;
     destructor destroy; override;
@@ -298,28 +302,79 @@ end;
 //Date: 2014-09-15
 //Desc: 验证能否开单
 function TWorkerBusinessBills.VerifyBeforSave(var nData: string): Boolean;
-var nIdx: Integer;
+var nIdx,nInt: Integer;
     nStr,nTruck: string;
     nOut: TWorkerBusinessCommand;
     nTime: Integer;
+    nJY: Boolean;
 begin
   Result := False;
   nTruck := FListA.Values['Truck'];
   if not VerifyTruckNO(nTruck, nData) then Exit;
 
-  nStr := 'Select %s as T_Now,T_LastTime,T_NoVerify,T_Valid From %s ' +
-          'Where T_Truck=''%s''';
-  nStr := Format(nStr, [sField_SQLServer_Now, sTable_Truck, nTruck]);
+  if FListA.Values['BuDan'] = sFlag_Yes then
+       nInt := 0
+  else nInt := GetInBillInterval;
 
-  with gDBConnManager.WorkerQuery(FDBConn, nStr) do
+  nJY := GetVerifyCard;
+  
+  if nInt > 0 then
   begin
-    if RecordCount > 0 then
+    nStr := ' Select %s as T_Now,T_LastTime,T_NoVerify,T_Valid,T_MaxBillNum From %s ' +
+            ' Where T_Truck=''%s''';
+    nStr := Format(nStr, [sField_SQLServer_Now, sTable_Truck, nTruck]);
+
+    with gDBConnManager.WorkerQuery(FDBConn, nStr) do
+    begin
+      {$IFDEF TruckParkReady}
+      if RecordCount < 1 then
+      begin
+        nData := '没有车辆[ %s ]的档案,无法开单.';
+        nData := Format(nData, [nTruck]);
+        Exit;
+      end;
+
+//      if FieldByName('T_MaxBillNum').AsFloat <= 0 then
+//      begin
+//        nData := '车辆[ %s ]毛重上限未设置,无法开单.';
+//        nData := Format(nData, [nTruck]);
+//        Exit;
+//      end;
+
       if FieldByName('T_Valid').AsString = sFlag_No then
       begin
         nData := '车辆[ %s ]被管理员禁止开单.';
         nData := Format(nData, [nTruck]);
         Exit;
       end;
+
+//      {$IFDEF UseTruckXZ}
+//      nMaxBillNum := FieldByName('T_MaxBillNum').AsFloat;
+//      {$ENDIF}
+
+      if nJY then
+      begin
+        nIdx := Trunc((FieldByName('T_Now').AsDateTime -
+                       FieldByName('T_LastTime').AsDateTime) * 24 * 60);
+        //上次活动分钟数
+
+        if nIdx >= nInt then
+        begin
+          nData := '车辆[ %s ]可能不在停车场,禁止开单.';
+          nData := Format(nData, [nTruck]);
+          Exit;
+        end;
+      end;
+      {$ELSE}
+      if RecordCount > 0 then
+        if FieldByName('T_Valid').AsString = sFlag_No then
+        begin
+          nData := '车辆[ %s ]被管理员禁止开单.';
+          nData := Format(nData, [nTruck]);
+          Exit;
+        end;
+      {$ENDIF}
+    end;
   end;
 
   {$IFDEF BusinessOnly}
@@ -353,7 +408,7 @@ begin
   {$IFDEF SanPreHK}
   FSanMultiBill := True;
   {$ELSE}
-  FSanMultiBill := AllowedSanMultiBill;
+  FSanMultiBill := False;
   {$ENDIF}//散装允许开多单
 
   nStr := 'Select M_ID,M_Group From %s Where M_Status=''%s'' ';
@@ -633,11 +688,17 @@ begin
         FListC.Values['Group'] :=sFlag_BusGroup;
         FListC.Values['Object'] := sFlag_BillNo;
         //to get serial no
-
+       {$IFNDEF  NoUseDate}
         if not TWorkerBusinessCommander.CallMe(cBC_GetSerialNO,
               FListC.Text, sFlag_Yes, @nOut) then
           raise Exception.Create(nOut.FData);
         //xxxxx
+       {$ELSE}
+        if not TWorkerBusinessCommander.CallMe(cBC_GetSerialNO,
+              FListC.Text, sFlag_No, @nOut) then
+          raise Exception.Create(nOut.FData);
+        //xxxxx
+       {$ENDIF}
       end;
 
       FOut.FData := FOut.FData + nOut.FData + ',';
@@ -646,34 +707,36 @@ begin
       FListC.Text := PackerDecodeStr(FListB[nIdx]);
       //get bill info
 
-      {$IFDEF CustomerType}
-        {$IFDEF HYJC}    //恒宇区分AB客户，但是不区分批次号
-         if not TWorkerBusinessCommander.CallMe(cBC_GetStockBatcode,
+      {$IFNDEF NoUseBatchCode}
+        {$IFDEF CustomerType}
+          {$IFDEF HYJC}    //恒宇区分AB客户，但是不区分批次号
+           if not TWorkerBusinessCommander.CallMe(cBC_GetStockBatcode,
+             FListC.Values['StockNO'], FListC.Values['Value'], @nTmp) then
+             raise Exception.Create(nTmp.FData);
+          {$ELSE}
+          FListC.Values['CustomerType'] := GetCusType(FListA.Values['CusID']);
+          if FListC.Values['CustomerType'] = '' then
+            raise Exception.Create('客户' + FListA.Values['CusID'] + '分类为空');
+
+          if not TWorkerBusinessCommander.CallMe(cBC_GetStockBatcodeByCusType,
+             FListC.Values['StockNO'], FListC.Text, @nTmp) then
+             raise Exception.Create(nTmp.FData);
+          {$ENDIF}
+        {$ELSE}
+        if not TWorkerBusinessCommander.CallMe(cBC_GetStockBatcode,
            FListC.Values['StockNO'], FListC.Values['Value'], @nTmp) then
            raise Exception.Create(nTmp.FData);
-        {$ELSE}
-        FListC.Values['CustomerType'] := GetCusType(FListA.Values['CusID']);
-        if FListC.Values['CustomerType'] = '' then
-          raise Exception.Create('客户' + FListA.Values['CusID'] + '分类为空');
-
-        if not TWorkerBusinessCommander.CallMe(cBC_GetStockBatcodeByCusType,
-           FListC.Values['StockNO'], FListC.Text, @nTmp) then
-           raise Exception.Create(nTmp.FData);
         {$ENDIF}
-      {$ELSE}
-      if not TWorkerBusinessCommander.CallMe(cBC_GetStockBatcode,
-         FListC.Values['StockNO'], FListC.Values['Value'], @nTmp) then
-         raise Exception.Create(nTmp.FData);
-      {$ENDIF}
 
-      {$IFDEF BatchInHYOfBill}
-      if nTmp.FData = '' then
-           FListC.Values['HYDan'] := FListC.Values['Seal']
-      else FListC.Values['HYDan'] := nTmp.FData;
-      {$ELSE}
-      if nTmp.FData <> '' then
-        FListC.Values['Seal'] := nTmp.FData;
-      //auto batcode
+        {$IFDEF BatchInHYOfBill}
+        if nTmp.FData = '' then
+             FListC.Values['HYDan'] := FListC.Values['Seal']
+        else FListC.Values['HYDan'] := nTmp.FData;
+        {$ELSE}
+        if nTmp.FData <> '' then
+          FListC.Values['Seal'] := nTmp.FData;
+        //auto batcode
+        {$ENDIF}
       {$ENDIF}
 
       if PBWDataBase(@nTmp).FErrCode = sFlag_ForceHint then
@@ -2651,6 +2714,9 @@ begin
               SF('L_NextStatus', ''),
               SF('L_Card', ''),
               SF('L_OutFact', sField_SQLServer_Now, sfVal),
+              {$IFDEF BasisWeightWithPM}
+              SF('L_Value', 'L_MValue-L_PValue',sfVal),
+              {$ENDIF}
               SF('L_OutMan', FIn.FBase.FFrom.FUser)
               ], sTable_Bill, SF('L_ID', FID), False);
       FListA.Add(nSQL); //更新交货单
@@ -2936,6 +3002,34 @@ begin
   if RecordCount > 0 then
   begin
     Result := Fields[0].AsString;
+  end;
+end;
+
+function TWorkerBusinessBills.GetInBillInterval: Integer;
+var nStr: string;
+begin
+  Result := 0;
+  nStr   := 'Select D_Value From %s Where D_Name=''%s'' And D_Memo=''%s''';
+  nStr   := Format(nStr, [sTable_SysDict, sFlag_SysParam, sFlag_InAndBill]);
+
+  with gDBConnManager.WorkerQuery(FDBConn, nStr) do
+  if RecordCount > 0 then
+  begin
+    Result := Fields[0].AsInteger;
+  end;
+end;
+
+function TWorkerBusinessBills.GetVerifyCard: Boolean;
+var nStr: string;
+begin
+  Result := False;
+  nStr   := ' Select D_Value From %s Where D_Name = ''%s'' ';
+  nStr   := Format(nStr, [sTable_SysDict, sFlag_VerifiyCard]);
+
+  with gDBConnManager.WorkerQuery(FDBConn, nStr) do
+  if RecordCount > 0 then
+  begin
+    Result := Fields[0].AsString = 'Y';
   end;
 end;
 

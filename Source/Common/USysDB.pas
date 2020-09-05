@@ -199,6 +199,7 @@ const
   sFlag_VIPManyNum      = 'VIPManyNum';              //提单量到量进VIP道
   sFlag_EnableTruck     = 'EnableTruck';             //是否启用车牌识别
   sFlag_TruckInNeedManu = 'TruckInNeedManu';         //车牌识别需要人工干预
+  sFlag_InAndBill       = 'InFactAndBill';           //进厂开单间隔
 
   sFlag_PDaiWuChaZ    = 'PoundDaiWuChaZ';            //袋装正误差
   sFlag_PDaiWuChaF    = 'PoundDaiWuChaF';            //袋装负误差
@@ -275,6 +276,7 @@ const
   sFlag_OrderDtl      = 'Bus_OrderDtl';              //采购单号
   sFlag_OrderBase     = 'Bus_OrderBase';             //采购申请单号
   sFlag_Grab          = 'Bus_Grab';                  //抓斗称单据号
+  sFlag_VerifiyCard   = 'VerifiyCard';               //取卡校验
 
   sFlag_Departments   = 'Departments';               //部门列表
   sFlag_DepDaTing     = '大厅';                      //服务大厅
@@ -298,6 +300,9 @@ const
   sFlag_InOutEnd      = 'EndTime';                   //进出厂查询结束时间
   sFlag_SealCount     = 'SealCount';                 //铅封录入个数
   sFlag_NoSealStock   = 'NoSealStock';               //无需录入铅封
+
+  sFlag_DefaultPValue = 'DefaultPValue';             //默认皮重
+  sFlag_PValueWuCha   = 'PValueWuCha';               //皮重误差范围
 
   sFlag_DuanDao       = 'D';                         //短倒(First=>Second)
   sFlag_Transfer      = 'Bus_Transfer';              //短倒单号

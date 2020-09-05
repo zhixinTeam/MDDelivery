@@ -55,6 +55,8 @@ type
     function GetWlbYsStatus(var nData: string):Boolean;
     //获取化验室验收结果
     {$ENDIF}
+    function AlterTruckSnap(var nData: string): Boolean;
+    //修改车辆签到信息
   public
     constructor Create; override;
     destructor destroy; override;
@@ -131,6 +133,8 @@ begin
    cBC_GetPostOrders        : Result := GetPostOrderItems(nData);
    cBC_SavePostOrders       : Result := SavePostOrderItems(nData);
    cBC_GetGYOrderValue      : Result := GetGYOrderValue(nData);
+
+   cBC_AlterTruckSnap       : Result := AlterTruckSnap(nData);
    {$IFDEF  DoubleCheck}
    cBC_SaveWlbYS            : Result := SaveWlbYS(nData);
    cBC_GetWlbYsStatus       : Result := GetWlbYsStatus(nData);
@@ -1466,6 +1470,41 @@ begin
 
   gDBConnManager.WorkerExec(FDBConn, nStr);
   Result := True;
+end;
+
+function TWorkerBusinessOrders.AlterTruckSnap(var nData: string): Boolean;
+var nIdx: Integer;
+    nStr, nTruck, nSql, nTruckID : string;
+begin
+  Result   := False;
+  nTruckID := '';
+  nTruck   := FIn.FData;
+
+  FOut.FData := '';
+  nSql := ' Select T_Truck From S_Truck Where T_Truck = ''%s'' ';
+  nSql := Format(nSql,[nTruck]);
+  with gDBConnManager.WorkerQuery(FDBConn,nSql) do
+  begin
+    if RecordCount > 0 then
+    begin
+      nTruckID   := Fields[0].AsString;
+      FOut.FData := Fields[0].AsString;
+    end;
+  end;
+  //----------------------------------------------------------------------------
+  FDBConn.FConn.BeginTrans;
+  try
+    nStr := MakeSQLByStr([
+            SF('T_LastTime', sField_SQLServer_Now, sfVal)
+            ], sTable_Truck, SF('T_Truck', nTruck), nTruckID='');
+    gDBConnManager.WorkerExec(FDBConn, nStr);
+    //更新车辆签到信息
+    FDBConn.FConn.CommitTrans;
+    Result := True;
+  except
+    FDBConn.FConn.RollbackTrans;
+    raise;
+  end;
 end;
 
 initialization

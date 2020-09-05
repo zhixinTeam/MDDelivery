@@ -1384,11 +1384,8 @@ begin
     begin
       nSaleManName := Fields[0].AsString;
     end;
-    if nPrice > 0 then
-      nData := '业务员: '+nSaleManName+' 客户名称: '+nCusName+' 入金金额: '+FloatToStr(nVal)+' 付款方式: '+ nPayment +' 详情: '+nStockName
-    else
-      nData := '业务员: '+nSaleManName+' 客户名称: '+nCusName+' 入金金额: '+FloatToStr(nVal);
 
+    nData := '业务员: '+nSaleManName+' 客户名称: '+nCusName+' 入金金额: '+FloatToStr(nVal)+' 付款方式: '+ nPayment +' 详情: '+nStockName;
     SaveCustomerPaymentEvent(nCusID,nData,sFlag_DepCaiWu,sFlag_Solution_OK,sFlag_DepXiaoShou);
     {$ENDIF}
     
@@ -1525,10 +1522,8 @@ begin
     begin
       nSaleManName := Fields[0].AsString;
     end;
-    if nPrice > 0 then
-      nData := '业务员: '+nSaleManName+' 客户名称: '+nCusName+' 入金金额: '+FloatToStr(nVal)+' 付款方式: '+ nPayment +' 详情: '+nStockName
-    else
-      nData := '业务员: '+nSaleManName+' 客户名称: '+nCusName+' 入金金额: '+FloatToStr(nVal);
+
+    nData := '业务员: '+nSaleManName+' 客户名称: '+nCusName+' 入金金额: '+FloatToStr(nVal)+' 付款方式: '+ nPayment +' 详情: '+nStockName;
     SaveCustomerPaymentEvent(nCusID,nData,sFlag_DepKaiPiao,sFlag_Solution_OK,sFlag_DepXiaoShou);
     {$ENDIF}
 

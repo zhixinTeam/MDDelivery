@@ -60,6 +60,8 @@ const
   cBC_DeleteOrderBase         = $0047;   //删除采购申请单
   cBC_GetGYOrderValue         = $0048;   //获取已收货量
 
+  cBC_AlterTruckSnap          = $0051;   //修改车辆签到信息
+
   cBC_GetPostBills            = $0030;   //获取岗位交货单
   cBC_SavePostBills           = $0031;   //保存岗位交货单
   cBC_MakeSanPreHK            = $0032;   //执行散装预合卡
@@ -83,6 +85,7 @@ const
   cBC_ShowLedTxt              = $0066;   //向led屏幕发送内容
   cBC_GetLimitValue           = $0067;   //获取车辆最大限载值
   cBC_LineClose               = $0068;   //关闭放灰
+  cBC_ReadBaseWeight          = $0069;   //读取库底计量信息
 
   cBC_IsTunnelOK              = $0075;
   cBC_TunnelOC                = $0076;
