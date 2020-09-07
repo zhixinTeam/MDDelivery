@@ -31,6 +31,8 @@ type
     FValTruckP    : Double;            //车辆皮重
     FWeightMax    : Double;            //修正后可装量:定值,装车中允许的最大量
 
+    FShowDetail   : Boolean;           //显示明细日志
+    FShowLastRecv : Cardinal;          //上次接收数据
     FStatusNow    : TBWStatus;         //当前状态
     FStatusNew    : TBWStatus;         //新状态
     FStableDone   : Boolean;           //平稳状态
@@ -120,6 +122,8 @@ type
     procedure StartService;
     procedure StopService;
     //起停服务
+    function IsBillBusy(const nBill: string;
+     const nData: PBWTunnel = nil): Boolean;
     function IsTunnelBusy(const nTunnel: string;
      const nData: PBWTunnel = nil): Boolean;
     //通道忙
@@ -229,7 +233,7 @@ begin
 
   for nIdx:=FTunnels.Count-1 downto 0 do
   begin
-    PBWTunnel(FTunnels[nIdx]).FEnable := FTunnelManager.ActivePort(PBWTunnel(FTunnels[nIdx]).FID, nil, True);
+    FTunnelManager.ActivePort(PBWTunnel(FTunnels[nIdx]).FID, nil, True);
   end;
   //启动端口
 end;
@@ -296,18 +300,7 @@ begin
   for nIdx:=FTunnels.Count-1 downto 0 do
   if CompareText(nTunnel, PBWTunnel(FTunnels[nIdx]).FID) = 0 then
   begin
-    if PBWTunnel(FTunnels[nIdx]).FEnable = True then
-    begin
-      Result := nIdx;
-    end
-    else
-    begin
-      //尝试重新连接
-      gBasisWeightManager.TunnelManager.ClosePort(nTunnel);
-      PBWTunnel(FTunnels[nIdx]).FEnable := gBasisWeightManager.TunnelManager.ActivePort(nTunnel, nil, True);
-      if PBWTunnel(FTunnels[nIdx]).FEnable = True then
-        Result := nIdx;
-    end;
+    Result := nIdx;
     Break;
   end;
 
@@ -333,7 +326,8 @@ begin
   try
     nPT := FTunnels[nIdx];
     Result := (nPT.FBill <> '') and
-              (nPT.FValue > 0) and (nPT.FValue > nPT.FValHas - nPT.FValTruckP);
+              (nPT.FValue > 0) and (nPT.FValue > nPT.FValHas - nPT.FValTruckP)
+              and (nPT.FValTunnel>0);
     //未装完
 
     if Assigned(nData) then
@@ -370,12 +364,12 @@ begin
         nPT.FWeightMax := nValue + nPValue + nPT.FValAdjust - nPT.FValKPFix -
                           nValue * nPT.FValKPPercent;
         //表头最大重量
-        WriteLog('开单重量:' + FloatToStr(nPT.FValue) +
-               '皮重重量:' + FloatToStr(nPValue) +
-               '冲击重量:' + FloatToStr(nPT.FValAdjust) +
-               '预扣重量:' + FloatToStr(nPT.FValKPFix) +
-               '预扣重量(%):' + FloatToStr(nPT.FValue * nPT.FValKPPercent) +
-               '最终计算:' + FloatToStr(nPT.FWeightMax));
+//        WriteLog('开单重量:' + FloatToStr(nPT.FValue) +
+//               '皮重重量:' + FloatToStr(nPValue) +
+//               '冲击重量:' + FloatToStr(nPT.FValAdjust) +
+//               '预扣重量:' + FloatToStr(nPT.FValKPFix) +
+//               '预扣重量(%):' + FloatToStr(nPT.FValue * nPT.FValKPPercent) +
+//               '最终计算:' + FloatToStr(nPT.FWeightMax));
       end;
     end;
 
@@ -573,6 +567,10 @@ begin
       if IsNumber(nStr, True) then
            nTunnel.FValTwiceDiff := StrToFloat(nStr)
       else nTunnel.FValTwiceDiff := 0.2; //大约2个成人
+
+      nStr := nTunnel.FTunnel.FOptions.Values['ShowWeight'];
+      nTunnel.FShowDetail := CompareText(nStr, 'Y') = 0;
+      nTunnel.FShowLastRecv := 0;
     end;
 
     InitTunnelData(nTunnel, False);
@@ -596,14 +594,18 @@ begin
       nTunnel := FTunnels[nIdx];
       if nTunnel.FTunnel <> nPort.FEventTunnel then Continue;
       nTunnel.FValUpdate := GetTickCount;
-      if Assigned(nTunnel.FTunnel.FOptions) then
-      begin
-        if nTunnel.FTunnel.FOptions.Values['ShowWeight'] = 'Y' then
-          WriteLog(('通道' + nTunnel.FTunnel.FID + '重量' + FloatToStr(nValue)));
-      end;
+
       if (nPort.FMinValue > 0) and (nValue < nPort.FMinValue) then
            nTunnel.FValTunnel := 0
       else nTunnel.FValTunnel := nValue;
+
+      if nTunnel.FShowDetail and (
+         GetTickCountDiff(nTunnel.FShowLastRecv) >= 1200) then
+      begin
+        WriteLog(Format('通道:[ %s.%s ] 数据:[ %.2f %.2f ]', [
+          nTunnel.FID, nTunnel.FTunnel.FName, nValue, nTunnel.FValTunnel]));
+        nTunnel.FShowLastRecv := GetTickCount();
+      end;
 
       if nTunnel.FValTunnel > nTunnel.FValMax then
         nTunnel.FValMax := nTunnel.FValTunnel;
@@ -836,6 +838,12 @@ begin
       //xxxxx
     end;
   end;
+end;
+
+function TBasisWeightManager.IsBillBusy(const nBill: string;
+  const nData: PBWTunnel): Boolean;
+begin
+  //
 end;
 
 initialization
