@@ -11,7 +11,7 @@ uses
   UWaitItem, USysLoger;
 
 type
-  TBWStatus = (bsInit, bsNew, bsStart, bsProcess, bsStable, bsDone, bsClose,bsError);
+  TBWStatus = (bsInit, bsNew, bsStart, bsProcess, bsStable, bsDone, bsClose);
   //状态: 初始化;新添加;开始;装车中;平稳;完成;关闭
 
   PBWTunnel = ^TBWTunnel;
@@ -125,6 +125,9 @@ type
     function IsBillBusy(const nBill: string;
      const nData: PBWTunnel = nil): Boolean;
     function IsTunnelBusy(const nTunnel: string;
+     const nData: PBWTunnel = nil): Boolean;
+    //通道忙
+    function IsTunnelBusyEx(const nTunnel: string;
      const nData: PBWTunnel = nil): Boolean;
     //通道忙
     procedure StartWeight(const nTunnel,nBill: string; const nValue: Double;
@@ -326,8 +329,8 @@ begin
   try
     nPT := FTunnels[nIdx];
     Result := (nPT.FBill <> '') and
-              (nPT.FValue > 0) and (nPT.FValue > nPT.FValHas - nPT.FValTruckP)
-              and (nPT.FValTunnel>0);
+              (nPT.FValue > 0)  and (nPT.FValTunnel>0)
+              and (nPT.FValue > nPT.FValHas - nPT.FValTruckP);
     //未装完
 
     if Assigned(nData) then
@@ -335,8 +338,35 @@ begin
     //xxxxx
   finally
     FSyncLock.Leave;
-  end;   
+  end;
 end;
+
+function TBasisWeightManager.IsTunnelBusyEx(const nTunnel: string;
+     const nData: PBWTunnel = nil): Boolean;
+var nIdx: Integer;
+    nPT: PBWTunnel;
+begin
+  Result := False;
+  nIdx := FindTunnel(nTunnel, True);
+
+  if nIdx < 0 then Exit;
+
+  FSyncLock.Enter;
+  try
+    nPT := FTunnels[nIdx];
+    Result := (nPT.FBill <> '') and
+              (nPT.FValue > 0)  and (nPT.FValTunnel>0)
+              and ((nPT.FValue > nPT.FValHas - nPT.FValTruckP) or (nPT.FValHas > 50) );
+    //未装完
+
+    if Assigned(nData) then
+      nData^ := nPT^;
+    //xxxxx
+  finally
+    FSyncLock.Leave;
+  end;
+end;
+
 
 //Date: 2018-12-27
 //Parm: 通道号;交货单;应装;皮重;参数
@@ -691,7 +721,7 @@ begin
       nItv := GetTickCountDiff(FActive.FValUpdate);
       if nItv >= FActive.FTONoData then //地磅故障
       begin
-        FOwner.DoChangeEvent(FActive, bsError);
+        FOwner.DoChangeEvent(FActive, bsClose);
         FOwner.InitTunnelData(FActive, False);
 
         WriteLog(Format('通道[ %s.%s ]故障,无数据应答.', [

@@ -521,6 +521,27 @@ end;
 //Date: 2019-03-12
 //Parm: 通道号;提示信息;车牌号
 //Desc: 在nTunnel的小屏上显示信息
+procedure ShowLEDHint(const nTunnel: string; nHint: string;
+  const nTruck: string = ''; const nPlayVoice: Boolean =True);
+var nStr: string;
+begin
+  if nPlayVoice then
+  begin
+    nStr := nHint;
+    gNetVoiceHelper.PlayVoice(nStr, nTunnel);
+  end;
+  if nTruck <> '' then
+    nHint := nTruck + StringOfChar(' ', 12 - Length(nTruck)) + nHint;
+  //xxxxx
+  
+  if Length(nHint) > 24 then
+    nHint := Copy(nHint, 1, 24);
+  gERelayManager.ShowTxt(nTunnel, nHint);
+end;
+
+//Date: 2019-03-12
+//Parm: 通道号;提示信息;车牌号
+//Desc: 在nTunnel的小屏上显示信息
 procedure ShowLEDHintPLC(const nTunnel: string; nHint: string;
   const nTruck: string = '';const nUnPLC:string = '');
 begin
@@ -616,6 +637,8 @@ end;
 procedure TruckStartFHBasisWeight(const nTruck: PTruckItem; const nTunnel: string;
  const nLading: TLadingBillItem; const UnPLC:string = '');
 var nStr, nTruckType: string;
+    nDBConn: PDBWorker;
+    nMValue, nVal : Double;
 begin
   {$IFDEF UseERelayPLC}
     if UnPLC <> '' then
@@ -647,6 +670,35 @@ begin
   //开始放灰
 
   nStr := Format('Truck=%s', [nTruck.FTruck]);
+
+  {$IFDEF TruckLoadLimit}
+  if nLading.FPData.FValue > 0 then
+  begin
+    nDBConn := nil;
+    try
+      nStr := ' select T_MaxBillNum from %s where T_Truck = ''%s'' ';
+      nStr := Format(nStr,[sTable_Truck,nTruck.FTruck]);
+      with gDBConnManager.SQLQuery(nStr, nDBConn) do
+      begin
+        if recordcount = 0 then
+        begin
+          nMValue := 49;
+        end;
+        nMValue := FieldByName('T_MaxBillNum').AsFloat;
+        if nMValue < 1 then
+          nMValue := 49;
+        nVal := nMValue - nLading.FPData.FValue;    //最大开单量
+        if nVal < nTruck.FValue then
+          nTruck.FValue := nVal;
+        WriteNearReaderLog(nTruck.FBill+'二次刷卡开单量：'+floattostr(nTruck.FValue));
+        //开单量根据限载和皮重算出的量取小值.
+      end;
+    finally
+      gDBConnManager.ReleaseConnection(nDBConn);
+    end;
+  end;
+  {$ENDIF}
+
   gBasisWeightManager.StartWeight(nTunnel, nTruck.FBill, nTruck.FValue,
     nLading.FPData.FValue, nStr);
   //开始定量装车
@@ -686,7 +738,9 @@ var nStr,nVoiceID : string;
     nPTruck: PTruckItem;
     nTrucks: TLadingBillItems;
     nPT: PPTTunnelItem;
+    nDBConn: PDBWorker;
 begin
+  nDBConn := nil;
   WriteNearReaderLog(Format('MakeTruckWeightFirst进入. %s %s %s',[nCard,nTunnel,UnPLC]));
 
   nVoiceID:= nTunnel;
@@ -733,7 +787,7 @@ begin
       Exit;
     end;
   end;
-
+  
  if gBasisWeightManager <> nil then
  begin
     with gBasisWeightManager.TunnelManager do
@@ -754,11 +808,11 @@ begin
     if gBasisWeightManager.IsTunnelBusy(nTunnel, @nPound) and
        (nPound.FBill <> nTrucks[0].FID) then //通道忙
     begin
-      if nPound.FValTunnel = 0 then //前车已下磅
+      if nPound.FValTunnel > 0 then //前车已下磅
       begin
         nStr := Format('%s 请等待前车', [nTrucks[0].FTruck]);
         ShowLEDHintPLC(nTunnel, nStr,'',UnPLC);
-
+        WriteNearReaderLog(nStr);
         {$IFDEF LineVoice}
         MakeGateSound(nStr, nVoiceID, False);
         {$ENDIF}
@@ -800,6 +854,40 @@ begin
       gNetVoiceHelper.PlayVoice(nTrucks[0].FTruck+'请换道装车',nTunnel);
     Exit;
   end; //检查通道
+  
+  //二次刷卡限制判断
+  if (nTrucks[0].FMData.FValue > 0) and (nTrucks[0].FMData.FValue <= 50) then
+  begin
+    if nTrucks[0].FMData.FValue - nTrucks[0].FPData.FValue >= nTrucks[0].FValue then
+    begin
+      WriteNearReaderLog(nTrucks[0].FTruck+'装车业务已完毕,请投卡出厂');
+      //语音播报
+      if Assigned(gNetVoiceHelper) then
+        gNetVoiceHelper.PlayVoice(nTrucks[0].FTruck+'装车业务已完毕,请投卡出厂',nTunnel);
+      Exit;
+    end;
+    try
+      nStr := ' Select T_MaxBillNum From %s where T_Truck = ''%s'' ';
+      nStr := Format(nStr,[sTable_Truck,nTrucks[0].FTruck]);
+     
+      with gDBConnManager.SQLQuery(nStr, nDBConn) do
+      begin
+        if RecordCount > 0 then
+        begin
+          if nTrucks[0].FMData.FValue >= FieldByName('T_MaxBillNum').AsFloat then
+          begin
+            WriteNearReaderLog(nTrucks[0].FTruck+'装车业务已完毕,请投卡出厂');
+            //语音播报
+            if Assigned(gNetVoiceHelper) then
+              gNetVoiceHelper.PlayVoice(nTrucks[0].FTruck+'装车业务已完毕,请投卡出厂',nTunnel);
+            Exit;
+          end;
+        end;
+      end;
+    finally
+      gDBConnManager.ReleaseConnection(nDBConn);
+    end;
+  end;
 
   if nTrucks[0].FStatus = sFlag_TruckIn then
   begin
@@ -2420,15 +2508,18 @@ begin
         {$ENDIF}
       end else
       begin
-        nStr := MakeSQLByStr([SF('L_Status', sFlag_TruckBFM),
-                SF('L_NextStatus', sFlag_TruckOut),
-                SF('L_LadeLine',   nLineID),
-                SF('L_LineName',   nLineName),
-                SF('L_MValue', nValue, sfVal),
-                SF('L_MDate', sField_SQLServer_Now, sfVal)
-          ], sTable_Bill, SF('L_ID', nTunnel.FBill), False);
-        gDBConnManager.WorkerExec(nDBConn, nStr);
-        WriteNearReaderLog((nTunnel.FID+'更新毛重值：'+FloatToStr(nValue)));
+        if  nValue >= nTunnel.FValTruckP then
+        begin
+          nStr := MakeSQLByStr([SF('L_Status', sFlag_TruckBFM),
+                  SF('L_NextStatus', sFlag_TruckOut),
+                  SF('L_LadeLine',   nLineID),
+                  SF('L_LineName',   nLineName),
+                  SF('L_MValue', nValue, sfVal),
+                  SF('L_MDate', sField_SQLServer_Now, sfVal)
+            ], sTable_Bill, SF('L_ID', nTunnel.FBill), False);
+          gDBConnManager.WorkerExec(nDBConn, nStr);
+          WriteNearReaderLog((nTunnel.FID+'更新毛重值：'+FloatToStr(nValue)));
+       end;
       end; //放灰状态,只更新重量,出厂时计算净重
     end;
 
@@ -2447,7 +2538,9 @@ var
   nList : TStrings;
   nIdx  : Integer;
   FLevel1,FLevel2: Double;
+  nDBConn: PDBWorker;
 begin
+  nDBConn := nil;
   if nTunnel.FStatusNew = bsProcess then
   begin
     if nTunnel.FWeightMax > 0 then
@@ -2500,6 +2593,9 @@ begin
     {$IFDEF BasisWeightWithPM}
       ShowLEDHintPLC(nTunnel.FID, '装车完成请等待保存称重','',nTunnel.FTunnel.FOptions.Values['EPLC']);
       WriteNearReaderLog(nTunnel.FID+'装车完成请等待保存称重');
+      //语音播报
+      if Assigned(gNetVoiceHelper) then
+        gNetVoiceHelper.PlayVoice('装车完毕,正在称毛重,请勿移动车辆',nTunnel.FID);
     {$ELSE}
       ShowLEDHint(nTunnel.FID, '装车完成 请下磅');
 
@@ -2605,6 +2701,20 @@ begin
             gERelayManagerPLC.OpenTunnel(nTunnel.FID+ '_Z');
             gERelayManagerPLC.CloseTunnel(nTunnel.FID+'_N');
             WriteNearReaderLog(nTunnel.FID+'毛重保存完毕,打开出口道闸,红绿灯,关闭放灰');
+            try
+              nStr := 'Select T_Valid From %s Where T_Bill = ''%s'' ';
+              nStr := Format(nStr, [sTable_ZTTrucks, nTunnel.FBill]);
+              with gDBConnManager.SQLQuery(nStr, nDBConn) do
+              begin
+                //
+              end;
+              //自动移出队列
+              nStr := 'Update %s Set T_Valid=''%s'' Where T_Bill = ''%s''';
+              nStr := Format(nStr, [sTable_ZTTrucks, sFlag_No, nTunnel.FBill]);
+              gDBConnManager.WorkerExec(nDBConn, nStr);
+            finally
+              gDBConnManager.ReleaseConnection(nDBConn);
+            end;
           end
           else
           begin
@@ -2625,9 +2735,9 @@ begin
           nTunnel.FWeightDone := False;
           Exit;
         end;
-          //语音播报
-          if Assigned(gNetVoiceHelper) then
-            gNetVoiceHelper.PlayVoice(nTunnel.FParams.Values['Truck']+'装车完毕请下磅',nTunnel.FID);
+        //语音播报
+        if Assigned(gNetVoiceHelper) then
+          gNetVoiceHelper.PlayVoice(nTunnel.FParams.Values['Truck']+'称重完毕请下磅',nTunnel.FID);
         {$ELSE}
           gProberManager.OpenTunnel(nTunnel.FID + '_Z');
         {$ENDIF}

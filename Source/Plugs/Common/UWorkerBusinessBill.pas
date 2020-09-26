@@ -58,6 +58,7 @@ type
     function GetCusType(const nCusID: string): string;
     //读取客户分类
     function VerifyBeforSave(var nData: string): Boolean;
+    function GetSaleYSKD(const nStockNo,nStcokName:string;var nData: string):Boolean;
     function SaveBills(var nData: string): Boolean;
     //保存交货单
     function DeleteBill(var nData: string): Boolean;
@@ -631,6 +632,12 @@ begin
   //unpack bill list
   nVal := 0;
 
+//  {$IFDEF XXMDGL}
+    //判断物料是否允许开单
+//    FListC.Text := PackerDecodeStr(FListB[0]);
+//    if not GetSaleYSKD(FListC.Values['StockNO'],FListC.Values['StockName'],nData) then Exit;
+//  {$ENDIF}
+
   for nIdx:=0 to FListB.Count - 1 do
   begin
     FListC.Text := PackerDecodeStr(FListB[nIdx]);
@@ -705,7 +712,6 @@ begin
       //combine bill
 
       FListC.Text := PackerDecodeStr(FListB[nIdx]);
-      //get bill info
 
       {$IFNDEF NoUseBatchCode}
         {$IFDEF CustomerType}
@@ -2427,11 +2433,20 @@ begin
       Break;
     end;
 
-    if nInt < 0 then
+    if nBills[0].FYSValid <> sFlag_Yes  then
     begin
-      nData := '岗位[ %s ]提交的毛重数据为0.';
-      nData := Format(nData, [PostTypeToStr(FIn.FExtParam)]);
-      Exit;
+      if nInt < 0 then
+      begin
+        nData := '岗位[ %s ]提交的毛重数据为0.';
+        nData := Format(nData, [PostTypeToStr(FIn.FExtParam)]);
+        Exit;
+      end;
+    end
+    else
+    begin
+      {$IFDEF XXMDGL}
+      nInt := 0;
+      {$ENDIF}
     end;
 
     with nBills[0] do
@@ -2645,6 +2660,7 @@ begin
         end;
       end else
       begin
+        {$IFNDEF XXMDGL}
         nSQL := MakeSQLByStr([SF('L_Value', 0.00, sfVal),
                 SF('L_Status', sFlag_TruckBFM),
                 SF('L_NextStatus', sFlag_TruckOut),
@@ -2661,6 +2677,17 @@ begin
                 SF('P_MStation', nBills[nInt].FMData.FStation)
                 ], sTable_PoundLog, SF('P_Bill', FID), False);
         FListA.Add(nSQL);
+        {$ELSE}
+        nSQL := MakeSQLByStr([SF('L_Value', 0.00, sfVal),
+                SF('L_Status', sFlag_TruckBFM),
+                SF('L_NextStatus', sFlag_TruckOut),
+                SF('L_PValue', FPData.FValue , sfVal),
+                SF('L_MValue', FPData.FValue , sfVal),
+                SF('L_MDate', sField_SQLServer_Now, sfVal),
+                SF('L_MMan', FIn.FBase.FFrom.FUser)
+                ], sTable_Bill, SF('L_ID', FID), False);
+        FListA.Add(nSQL);
+        {$ENDIF}
       end;
     end;
 
@@ -2723,18 +2750,29 @@ begin
 
       if FYSValid <> sFlag_Yes then
       begin
-        nVal := Float2Float(FPrice * FValue, cPrecision, True);
+//        nVal := Float2Float(FPrice * FValue, cPrecision, True);
         //提货金额
+        nSQL := ' update Sys_CustomerAccount set A_OutMoney = L_Money From( ' +
+          ' Select Sum(L_Money) L_Money, L_CusID from ( ' +
+          ' select isnull(L_Value,0) * isnull(L_Price,0) as L_Money, L_CusID from S_Bill ' +
+          ' where L_OutFact Is not Null ) t Group by L_CusID) b where A_CID = b.L_CusID ';
+        FListA.Add(nSQL); //校正出金
 
-        nSQL := 'Update %s Set A_OutMoney=A_OutMoney+(%.2f),' +
-                'A_FreezeMoney=A_FreezeMoney-(%.2f) Where A_CID=''%s''';
-        nSQL := Format(nSQL, [sTable_CusAccount, nVal, nVal, FCusID]);
-        FListA.Add(nSQL); //更新客户资金(可能不同客户)
+        nSQL := ' update Sys_CustomerAccount set A_FreezeMoney = L_Money From( ' +
+          ' Select Sum(L_Money) L_Money, L_CusID from ( ' +
+          ' select isnull(L_Value,0) * isnull(L_Price,0) as L_Money, L_CusID from S_Bill ' +
+          ' where L_OutFact Is  Null ) t Group by L_CusID) b where A_CID = b.L_CusID ';
+        FListA.Add(nSQL); //校正冻结资金
+
+        nSQL := ' update Sys_CustomerAccount set A_FreezeMoney = 0  where ' +
+          ' A_CID  not in (select L_CusID from S_Bill ' +
+          ' where L_OutFact Is Null Group by L_CusID ) ';
+        FListA.Add(nSQL); //校正冻结资金
       end;
       {$IFDEF PrintHYEach}
       if FPrintHY then
       begin
-        FListC.Values['Group'] :=sFlag_BusGroup;
+        FListC.Values['Group']  :=sFlag_BusGroup;
         FListC.Values['Object'] := sFlag_HYDan;
         //to get serial no
 
@@ -3032,6 +3070,31 @@ begin
     Result := Fields[0].AsString = 'Y';
   end;
 end;
+
+function TWorkerBusinessBills.GetSaleYSKD(const nStockNo,nStcokName:string;var nData: string): Boolean;
+var
+  nStr : string;
+begin
+  Result := True;
+  
+  nStr := ' Select D_ParamD From Sys_Dict' +
+          ' Where D_Name = ''%s'' and D_ParamB = ''%s'' ';
+  nStr := Format(nStr, ['StockItem', nStockNo]);
+
+  with gDBConnManager.WorkerQuery(FDBConn, nStr) do
+  begin
+    if RecordCount >  0 then
+    begin
+      if FieldByName('D_ParamD').AsString = sFlag_No then
+      begin
+        Result := False;
+        nData  := '品种[ %s ]库存不足,禁止开单.';
+        nData  := Format(nData, [nStcokName]);
+        Exit;
+      end;
+    end;
+  end;
+end;   
 
 initialization
   gBusinessWorkerManager.RegisteWorker(TWorkerBusinessBills, sPlug_ModuleBus);

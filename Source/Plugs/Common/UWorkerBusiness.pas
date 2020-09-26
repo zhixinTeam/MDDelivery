@@ -642,7 +642,7 @@ begin
   FOut.FData := IntToStr(nInt);
   //last days
 
-  if nInt <= 7 then
+  if nInt <= 31 then
   begin
     nStr := Format('系统在 %d 天后过期', [nInt]);
     FOut.FBase.FErrDesc := nStr;

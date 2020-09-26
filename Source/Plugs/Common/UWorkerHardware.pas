@@ -790,7 +790,6 @@ begin
   Result := True;
   FListA.Clear;
   nTunnel := FIn.FData;
-  WriteLog('读取库底计量:'+nTunnel);
   with gBasisWeightManager.TunnelManager do
   begin
     nPT := GetTunnel(nTunnel);
@@ -801,7 +800,7 @@ begin
       Exit;
     end;
   end;
-  if gBasisWeightManager.IsTunnelBusy(nTunnel, @nPound) then //通道忙
+  if gBasisWeightManager.IsTunnelBusyEx(nTunnel, @nPound) then //通道忙
   begin
     FListA.Values['Bill']     := nPound.FBill;
     FListA.Values['PValue']   := FloatToStr(nPound.FValTruckP);

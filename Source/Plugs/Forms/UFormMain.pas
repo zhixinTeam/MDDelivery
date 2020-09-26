@@ -214,20 +214,23 @@ var nStr: string;
 begin
   ShowWaitForm(Self, '正在退出系统', True);
   try
-    ROModule.ActiveServer([stTcp, stHttp], False, nStr);
-    //stop server
+    try
+      ROModule.ActiveServer([stTcp, stHttp], False, nStr);
+      //stop server
 
-    FormSaveConfig;
-    //save config
+      FormSaveConfig;
+      //save config
 
-    FreeSystemObject;
-    //system object
-                             
-    {$IFNDEF debug}
-    Sleep(2200);
-    {$ENDIF}
-  finally
-    CloseWaitForm;
+      FreeSystemObject;
+      //system object
+
+      {$IFNDEF debug}
+      Sleep(2200);
+      {$ENDIF}
+    finally
+      CloseWaitForm;
+    end;
+  except
   end;
 end;
 
