@@ -53,7 +53,7 @@
 {.$DEFINE COMMON}
 //通用版本
 
-{$DEFINE XXMDGL}
+{$DEFINE XXMD}
 //特定系统
 
 //新乡孟电
@@ -176,7 +176,7 @@
   {.$DEFINE PrintHYEach}
   //随车开化验单
   {.$DEFINE PrintHeGeZheng}
-  {$DEFINE PrintHuaYanDan}
+  {.$DEFINE PrintHuaYanDan}
   //随车开单时打合格证、化验单
   {$DEFINE BatchInHYOfBill}
   //批次保存在化验单字段
@@ -194,7 +194,7 @@
   //使用微信
   {$DEFINE UseCustomertMoney}
   //订单量使用客户余额计算
-  {$DEFINE PrintHY}
+  {.$DEFINE PrintHY}
   //出厂打印化验单
   {$DEFINE SaveHyDanEvent}
   //生成推送化验单事件
